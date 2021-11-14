@@ -35,6 +35,10 @@ public:
 	{
 		m_AnimInstance->ChangeAnimType(ESelectPlayerAnimType::Select);
 	}
+	ESelectPlayerAnimType GetPlayerAnimType()
+	{
+		return m_AnimInstance->GetAnimType();
+	}
 	
 protected:
 	// Called when the game starts or when spawned

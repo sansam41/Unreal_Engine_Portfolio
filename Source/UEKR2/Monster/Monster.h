@@ -3,50 +3,61 @@
 #pragma once
 
 #include "../GameInfo.h"
-#include "GameFramework/Character.h"
-#include "MonsterAnimInstance.h"
 #include "Components/WidgetComponent.h"
+#include "MonsterAnimInstance.h"
+#include "GameFramework/Character.h"
 #include "Monster.generated.h"
 
-
 USTRUCT(BlueprintType)
-struct FMonsterInfo {
+struct FMonsterInfo
+{
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	FString Name;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 Attack;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 Armor;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 HP;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 HPMax;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 MP;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 MPMax;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 Level;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 Exp;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	int32 Gold;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	float AttackDistance;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	float AttackSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	float MoveSpeed;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	float AttackAngle;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	float TraceDistance;
+	FString			Name;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32			Attack;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32			Armor;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32			HP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32			HPMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32			MP;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32			MPMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32			Level;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32			Exp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32			Gold;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float			AttackDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float			AttackSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float			AttackAngle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float			MoveSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float			TraceDistance;
 };
 
 UCLASS()
@@ -60,63 +71,110 @@ public:
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	FMonsterInfo m_MonsterInfo;
+	FMonsterInfo	m_MonsterInfo;
 
-	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess="true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* m_HPBar;
 
 	class UHPBar* m_HPBarWidget;
-	
 
 	class AMonsterSpawnPoint* m_SpawnPoint;
 
-
-	FString m_MonsterInfoName;
+	FString			m_MonsterInfoName;
 
 	class UMonsterAnimInstance* m_AnimInstance;
 
-	bool	m_AttackEnd;
+	bool		m_AttackEnd;
 
-	TArray<FVector> m_PatrolArray;
-	int32 m_PatrolIndex;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	TArray<FVector>	m_PatrolArray;
+	int32			m_PatrolIndex;
+
+	bool		m_DissolveEnable;
+	float		m_Dissolve;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float		m_DissolveMin;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float		m_DissolveMax;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	float		m_DissolveTime;
+
+	float		m_PatrolLength;
+	float		m_CurrentPatrolLength;
+	int32		m_CurrentPatrolIndex;
+
+	float		m_DissolveAccTime;
+	float		m_DissolveRange;
+
+	bool		m_PatrolEnable;
+
+	class APatrolPointSpline* m_PatrolSpline;
+
+	TArray<FString> m_DropItemNameArray;
+
+	bool IsDead;
 
 public:
+	bool GetPatrolWait();
+	FVector GetPatrolPointSpline();
+
+	void SetPatrolEnable(bool Enable)
+	{
+		m_PatrolEnable = Enable;
+	}
+
+	void SetPatrolPointSpline(class APatrolPointSpline* Spline)
+	{
+		m_PatrolSpline = Spline;
+	}
+
+	void SetPatrolLength(float Length)
+	{
+		m_PatrolLength = Length;
+	}
 
 	FVector GetPatrolPoint()
 	{
-		if(m_PatrolIndex>=m_PatrolArray.Num())
-			m_PatrolIndex=0;
-		return m_PatrolArray[m_PatrolIndex];	
+		if (m_PatrolIndex >= m_PatrolArray.Num())
+			m_PatrolIndex = 0;
+
+		return m_PatrolArray[m_PatrolIndex];
 	}
 
 	void NextPatrolPoint()
 	{
 		++m_PatrolIndex;
+		++m_CurrentPatrolIndex;
 
-		if(m_PatrolIndex>=m_PatrolArray.Num())
-		{
-			m_PatrolIndex=0;
-		}
+		if (m_PatrolIndex >= m_PatrolArray.Num())
+			m_PatrolIndex = 0;
+
+		if (m_CurrentPatrolIndex >= 3)
+			m_CurrentPatrolIndex = 0;
 	}
-	
-	
-	EMonsterAnimType GetAnimType() const;
 
-	bool GetAttackEnd() const{
+	EMonsterAnimType GetAnimType()	const;
+
+	bool GetAttackEnd()	const
+	{
 		return m_AttackEnd;
 	}
 
-	void SetAttackEnd(bool AttackEnd) {
-		m_AttackEnd = AttackEnd;		
+	void SetAttackEnd(bool AttackEnd)
+	{
+		m_AttackEnd = AttackEnd;
 	}
 
 	void ChangeAnimType(EMonsterAnimType Type);
 
-	void SetSpawnPoint(class AMonsterSpawnPoint* SpawnPoint) {
+	void SetSpawnPoint(class AMonsterSpawnPoint* SpawnPoint)
+	{
 		m_SpawnPoint = SpawnPoint;
 	}
-
 
 	FMonsterInfo& GetMonsterInfo()
 	{
@@ -128,8 +186,6 @@ public:
 		m_PatrolArray.Add(Point);
 	}
 
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
-	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -137,6 +193,9 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser);
+
+
 public:
 	void Death();
 
@@ -146,4 +205,10 @@ public:
 public:
 	UFUNCTION()
 	void NameWidgetCallback();
+
+public:
+	bool MonsterIsDead()
+	{
+		return IsDead;
+	}
 };

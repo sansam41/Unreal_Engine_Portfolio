@@ -3,7 +3,13 @@
 
 #include "UEKR2GameModeBase.h"
 #include "UEKR2GameInstance.h"
+#include "AssetManager/AssetPathMain.h"
+#include "Network/NetworkManager.h"
+#include "Network/PacketStream.h"
+#include "Network/RecvQueue.h"
+#include "UI/ChatWidget.h"
 #include "Player/MainPlayerController.h"
+#include "User/UserKnightCharacter.h"
 
 
 AUEKR2GameModeBase::AUEKR2GameModeBase() {
@@ -67,6 +73,11 @@ void AUEKR2GameModeBase::InitGame(const FString& MapName, const FString& Options
 		}
 	}
 
+
+	m_MainAssetPath = UAssetPathMain::StaticClass()->GetDefaultObject<UAssetPathMain>();
+
+	m_MainAssetPath->ConvertPath();
+
 }
 void AUEKR2GameModeBase::BeginPlay()
 {
@@ -89,10 +100,78 @@ void AUEKR2GameModeBase::BeginPlay()
 
 	//Mode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 	//EMouseLockMode::LockOnCapture
+
+
 }
 
 void AUEKR2GameModeBase::Tick(float DeltaSeconds)
 {
+	Super::Tick(DeltaSeconds);
+	RecvQueue* Queue = NetworkManager::GetInst()->GetQueue();
+
+	while(!Queue->Empty())
+	{
+		int32 Protocol = -1,Length = 0;
+		uint8 Packet[PACKET_SIZE]={};
+
+		if(Queue->Pop(Protocol,Length, Packet))
+		{
+			switch((NetworkProtocol)Protocol)
+			{
+			case NetworkProtocol::Chat:
+				{	// 채팅 메세지가 왔을 경우 해당 메세지를 채팅창에 전달
+					TCHAR	Msg[1024]={};
+
+					FMemory::Memcpy(Msg,Packet,Length);
+
+					m_MainHUD->GetChatWidget()->AddMsg(Msg);
+					
+					break;
+				}
+			case NetworkProtocol::UserConnect:
+				{
+					// 여기에 들어오면 다른 유저가 접속했다는 것이다.
+					// 그러므로 해당 유저를 생성해 주도록 한다.
+					PacketStream	stream;
+					stream.SetBuffer(Packet);
+
+					EPlayerJob	Job;
+					stream.Read(&Job, 4);
+
+					FVector	Pos, Scale;
+					FRotator	Rot;
+
+					stream.Read(&Pos, 12);
+					stream.Read(&Scale, 12);
+					stream.Read(&Rot, 12);
+
+					AUserCharacter* User = nullptr;
+
+					switch (Job)
+					{
+					case EPlayerJob::Knight:
+						{
+							FActorSpawnParameters	param;
+							param.SpawnCollisionHandlingOverride =
+								ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+							User = GetWorld()->SpawnActor<AUserKnightCharacter>(
+								AUserKnightCharacter::StaticClass(), Pos + FVector(0.f, -200.f, 0.f), Rot,
+								param);
+							User->SetActorScale3D(Scale);
+
+							PrintViewport(1.f, FColor::Red, TEXT("Knight"));
+						}
+						break;
+					case EPlayerJob::Archer:
+						break;
+					case EPlayerJob::Mage:
+						break;
+					}
+				}
+				break;
+			}
+		}
+	}
 	AMainPlayerController* Controller = Cast<AMainPlayerController>(GetWorld()->GetFirstPlayerController());
 
 

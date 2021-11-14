@@ -46,7 +46,9 @@ void AParticleProjectile::Tick(float DeltaTime)
 	m_DestroyTime += DeltaTime;
 
 	if (m_DestroyTimeMax <= m_DestroyTime)
+	{
 		Destroy();
+	}
 }
 
 void AParticleProjectile::ProjectileStop(const FHitResult& result)

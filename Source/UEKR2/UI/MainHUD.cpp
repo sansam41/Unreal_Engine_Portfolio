@@ -13,6 +13,9 @@
  	m_InventoryTile = Cast<UInventoryTile>(GetWidgetFromName(TEXT("UI_InventoryTile")));
  	m_Auction = Cast<UAuctionWidget>(GetWidgetFromName(TEXT("UI_AuctionWidget")));
  	m_LandScapeSlider = Cast<USlider>(GetWidgetFromName(TEXT("LandScapeTiling")));
+ 	m_ChatWidget = Cast<UChatWidget>(GetWidgetFromName(TEXT("UI_Chat")));
+ 	m_QuestWidget = Cast<UQuestWidget>(GetWidgetFromName(TEXT("UI_Quest")));
+ 	m_Minimap = Cast<UMinimapWidget>(GetWidgetFromName(TEXT("UI_Minimap")));
 
 	m_LandScapeSlider->OnValueChanged.AddDynamic(this,&UMainHUD::LandScapeSliderValue);
 
@@ -24,6 +27,7 @@
  	m_MainMenu->SetInventoryList(m_InventoryList);
  	m_MainMenu->SetInventoryTile(m_InventoryTile);
  	m_MainMenu->SetAuctionWidget(m_Auction);
+ 	m_MainMenu->SetQuestWidget(m_QuestWidget);
 
 
  	m_MainMenu->SetVisibility(ESlateVisibility::Collapsed);

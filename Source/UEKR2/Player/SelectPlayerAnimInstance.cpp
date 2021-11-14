@@ -23,3 +23,9 @@ void USelectPlayerAnimInstance::AnimNotify_TransitionIdle()
 {
 	m_AnimType = ESelectPlayerAnimType::Idle;
 }
+
+UFUNCTION()
+void USelectPlayerAnimInstance::AnimNotify_IdleStart()
+{
+	m_AnimType = ESelectPlayerAnimType::IdleStart;
+}

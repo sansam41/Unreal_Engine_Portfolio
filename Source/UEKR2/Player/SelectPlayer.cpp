@@ -12,6 +12,9 @@ ASelectPlayer::ASelectPlayer()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	GetMesh()->bRenderCustomDepth=true;
+	GetMesh()->CustomDepthStencilWriteMask = ERendererStencilMask::ERSM_Default;
+	GetMesh()->CustomDepthStencilValue= 255; 
 }
 
 // Called when the game starts or when spawned

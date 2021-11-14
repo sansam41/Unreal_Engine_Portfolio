@@ -5,6 +5,7 @@
 #include "AuctionWidget.h"
 #include "InventoryList.h"
 #include "InventoryTile.h"
+#include "QuestWidget.h"
 #include "../GameInfo.h"
 #include "Components/Button.h"
 #include "Blueprint/UserWidget.h"
@@ -33,6 +34,7 @@ protected:
 	UInventoryList* m_InventoryList;
 	UInventoryTile* m_InventoryTile;
 	UAuctionWidget* m_AuctionWidget;
+	UQuestWidget*	m_QuestWidget;
 
 public:
 	void SetInventoryList(UInventoryList* List)
@@ -48,6 +50,11 @@ public:
 	{
 		m_AuctionWidget=Auction;
 	}
+
+	void SetQuestWidget(UQuestWidget* Quest)
+	{
+		m_QuestWidget=Quest;
+	}
 	
 protected:
 	virtual void NativeConstruct() override;
@@ -62,4 +69,7 @@ public:
 	
 	UFUNCTION()
 	void OnAuctionWidget();
+	
+	UFUNCTION()
+	void OnQuestWidget();
 };

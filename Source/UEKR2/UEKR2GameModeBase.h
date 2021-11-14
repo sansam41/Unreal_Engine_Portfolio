@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameInfo.h"
+#include "AssetManager/AssetPathMain.h"
 #include "GameFramework/GameModeBase.h"
 #include "UI/MainHUD.h"
 #include "UEKR2GameModeBase.generated.h"
@@ -26,6 +27,8 @@ protected:
 	TArray<TSubclassOf<APawn>> m_PlayerClassArray;
 
 	UMainHUD* m_MainHUD;
+
+	UAssetPathMain* m_MainAssetPath;
 
 public:
 

@@ -15,6 +15,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	UParticleSystemComponent* m_ParticleSystem;
 
+	FSoftObjectPath m_AsyncParticlePath;
+	FSoftObjectPath m_AsyncSoundPath;
+
+	TSharedPtr<FStreamableHandle> m_AsyncParticleLoadHandle;
+	TSharedPtr<FStreamableHandle> m_AsyncSoundLoadHandle;
 	bool m_AssetLoop;
 
 public:
@@ -35,7 +40,12 @@ public:
 	virtual void Tick(float DeltaTime) override;
 public:
 	void LoadParticle(const FString& Path);
+	void LoadParticleAsync(const FString& Name);
+	void LoadParticleAsyncComplete();
+
 	void LoadSound(const FString& Path);
+	void LoadSoundAsync(const FString& Name);
+	void LoadSoundAsyncComplete();
 
 public:
 	UFUNCTION()

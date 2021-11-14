@@ -31,7 +31,7 @@ void UAuctionList::NativeConstruct()
 
 		
 		Data->SetNameText(Info->Name);
-		Data->SetIconPath(Info->IconPath);
+		Data->SetIcon(Info->IconTexture);
 		Data->SetType(Info->Type,Info->Type);
 		
 		

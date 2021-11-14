@@ -4,6 +4,7 @@
 
 #include "../GameInfo.h"
 #include "PlayerCharacter.h"
+#include "UEKR2/Effect/WraithSkill1Bullet.h"
 #include "Wraith.generated.h"
 
 /**
@@ -28,6 +29,9 @@ protected:
 	// UClass정보를 가짐
 	//TSubclassOf<AGreystoneSkill1> m_Skill1Class;
 
+	
+	TSubclassOf<AWraithSkill1Bullet> m_Skill1Class;
+	
 	int32 m_AttackIndex;
 
 	//class AWeapon* m_Weapon;

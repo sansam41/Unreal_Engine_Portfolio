@@ -20,9 +20,8 @@ void UInventoryItemTile::SetData(UObject* Data)
 {
 	UInventoryItemDataTile* InvenData = Cast<UInventoryItemDataTile>(Data);
 
-	InvenData->SetIconTexture(LoadObject<UTexture2D>(nullptr,
-		*InvenData->GetIconPath()));
+	UTexture2D* IconTexture = InvenData->GetIconTexture();
 
 	if (InvenData)
-		m_IconImage->SetBrushFromTexture(InvenData->GetIconTexture());
+		m_IconImage->SetBrushFromTexture(IconTexture);
 }

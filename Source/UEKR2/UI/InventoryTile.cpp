@@ -2,6 +2,8 @@
 
 
 #include "InventoryTile.h"
+
+#include "InventoryTileData.h"
 #include "../UEKR2GameInstance.h"
 #include "Components/CanvasPanelSlot.h"
 
@@ -27,21 +29,13 @@ void UInventoryTile::NativeConstruct()
 	// 슬롯은 무조건 20개 유지
 	for(int i=0;i<20;i++)
 	{
-		UObject* Data=NewObject<UObject>(this,UObject::StaticClass());
+		UInventoryTileData* Data=NewObject<UInventoryTileData>(this,UInventoryTileData::StaticClass());
 		m_InventorySlot->AddItem(Data);
 		m_SlotArray.Add(Data);
 	}
-
+	/*
 	UUEKR2GameInstance* GameInst=Cast<UUEKR2GameInstance>(GetWorld()->GetGameInstance());
 
-	// C++ 코드로 동적으로 아이템 추가
-	/*UImage* Item0 = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("Item0"));
-
-	UCanvasPanel* Canvas = WidgetTree->FindWidget<UCanvasPanel>(TEXT("CanvasPanel1"));
-
-	UCanvasPanelSlot* PanelSlot = Canvas->AddChildToCanvas(Item0);
-	PanelSlot->SetPosition(FVector2D(200.f,50.f));
-	PanelSlot->SetSize(FVector2D(50.f,50.f));*/
 	
 	for (int32 i = 0; i < 100; ++i)
 	{
@@ -52,7 +46,7 @@ void UInventoryTile::NativeConstruct()
 		UInventoryItemDataTile* Data = NewObject<UInventoryItemDataTile>(this,
 		UInventoryItemDataTile::StaticClass());
 
-		Data->SetIconPath(Info->IconPath);
+		Data->SetIcon(Info->IconTexture);
 		Data->SetIndex(i);
 		Data->SetNameText(Info->Name);
 
@@ -60,14 +54,14 @@ void UInventoryTile::NativeConstruct()
 
 		if (i >= 20)
 		{
-			UObject* Data1 = NewObject<UObject>(this, UObject::StaticClass());
+			UInventoryTileData* Data1 = NewObject<UInventoryTileData>(this, UInventoryTileData::StaticClass());
 
 			m_InventorySlot->AddItem(Data1);
 
 			m_SlotArray.Add(Data1);
 		}
 	}
-	
+	*/
 	m_ItemCount=100;
 
 	m_InventoryTile->OnItemClicked().AddUObject(this, &UInventoryTile::ItemClick);
@@ -172,4 +166,17 @@ void UInventoryTile::ItemHovered(UObject* Data,bool Hovered)
 	{
 		m_ItemDescWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
+}
+
+
+void UInventoryTile::AddItem(const FUIItemTableInfo* ItemInfo)
+{
+	UInventoryItemDataTile* Data = NewObject<UInventoryItemDataTile>(this,
+		UInventoryItemDataTile::StaticClass());
+
+	Data->SetIcon(ItemInfo->IconTexture);
+	Data->SetNameText(ItemInfo->Name);
+	Data->SetIndex(m_InventoryTile->GetNumItems());
+
+	m_InventoryTile->AddItem(Data);
 }

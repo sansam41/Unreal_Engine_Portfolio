@@ -29,6 +29,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowprivateAccess = "true"))
 	TArray<class APatrolPoint*> m_PatrolPointArray;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	class APatrolPointSpline* m_PatrolPointSpline;
 public:
 	void Death() {
 		m_Monster = nullptr;

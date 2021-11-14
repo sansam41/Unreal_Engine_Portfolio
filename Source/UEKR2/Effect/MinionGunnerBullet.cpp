@@ -12,16 +12,16 @@ AMinionGunnerBullet::AMinionGunnerBullet()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticleAsset(TEXT("ParticleSystem'/Game/AdvancedMagicFX13/Particles/P_ky_stabShot.P_ky_stabShot'"));
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticleAsset(TEXT("ParticleSystem'/Game/AdvancedMagicFX12/particles/P_ky_shot_dark.P_ky_shot_dark'"));
 
 	if(ParticleAsset.Succeeded())
 		m_Particle->SetTemplate(ParticleAsset.Object);
-
+	
 	m_Movement->InitialSpeed=2000.f;
 
 	
 	m_Body->SetCollisionProfileName(TEXT("EnemyAttack"));
-
+	m_Particle->SetRelativeRotation(FRotator(0.f,-90.f,0.f));
 	
 }
 
@@ -53,7 +53,7 @@ void AMinionGunnerBullet::StopEvent(const FHitResult& result)
 	Effect->LoadParticle(TEXT("ParticleSystem'/Game/AdvancedMagicFX13/Particles/P_ky_flash1.P_ky_flash1'"));
 
 	// Sound
-	Effect->LoadSound(TEXT("SoundWave'/Game/Sound/Fire4.Fire4'"));
+	Effect->LoadSound(TEXT("SoundWave'/Game/Sound/LaserShot.LaserShot'"));
 
 	m_Particle->DestroyComponent();
 

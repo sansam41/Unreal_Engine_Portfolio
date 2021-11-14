@@ -10,6 +10,7 @@ UENUM(BlueprintType)
 enum class ESelectPlayerAnimType : uint8
 {
 	Idle,
+	IdleStart,
 	Select,
 };
 
@@ -35,10 +36,18 @@ class UEKR2_API USelectPlayerAnimInstance : public UAnimInstance
 		m_AnimType = Type;
 	}
 
+	ESelectPlayerAnimType GetAnimType()
+	{
+		return m_AnimType;
+	}
+
 	public:
 
 	UFUNCTION()
 	void AnimNotify_TransitionIdle();
+	
+	UFUNCTION()
+	void AnimNotify_IdleStart();
 	
 	///virtual void NativeInitializeAnimation();
 	//virtual void NativeUpdateAnimation(float DeltaSeconds);

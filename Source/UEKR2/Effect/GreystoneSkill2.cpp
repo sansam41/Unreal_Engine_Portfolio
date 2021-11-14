@@ -67,4 +67,6 @@ void AGreystoneSkill2::StopEvent(const FHitResult& result)
 		AGreystoneSkill2Decal* Decal = GetWorld()->SpawnActor<AGreystoneSkill2Decal>(AGreystoneSkill2Decal::StaticClass(),
 			LineResult.ImpactPoint, FRotator::ZeroRotator, param1);
 	}
+	
+	this->Destroy();
 }

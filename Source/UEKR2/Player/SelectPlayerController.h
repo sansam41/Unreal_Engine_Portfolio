@@ -19,6 +19,7 @@ public:
 private:
 	bool m_LButtonClick;
 	EPlayerJob m_SelectJob;
+	ACharacter* m_SelectCharacter;
 
 public:
 	EPlayerJob GetSelectJob() const

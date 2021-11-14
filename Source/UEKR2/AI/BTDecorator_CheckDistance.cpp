@@ -5,6 +5,7 @@
 #include "../Player/PlayerCharacter.h"
 #include "../Monster/Monster.h"
 #include "../Monster/MonsterAIController.h"
+#include "UEKR2/RPG/Player/RPG_PlayerCharacter.h"
 
 
 UBTDecorator_CheckDistance::UBTDecorator_CheckDistance() 
@@ -26,7 +27,8 @@ bool UBTDecorator_CheckDistance::CalculateRawConditionValue(UBehaviorTreeCompone
 	if (!Monster)
 		return false;
 
-	APlayerCharacter* Target = Cast<APlayerCharacter>(Controller->GetBlackboardComponent()->GetValueAsObject(("Target")));
+	//APlayerCharacter* Target = Cast<APlayerCharacter>(Controller->GetBlackboardComponent()->GetValueAsObject(("Target")));
+	ARPG_PlayerCharacter* Target = Cast<ARPG_PlayerCharacter>(Controller->GetBlackboardComponent()->GetValueAsObject(("Target")));
 
 	if (!Target)
 		return false;

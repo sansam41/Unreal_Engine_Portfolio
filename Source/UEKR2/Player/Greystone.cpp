@@ -7,6 +7,7 @@
 #include "Weapon.h"
 #include "UEKR2/Effect/GreystoneSkill3Decal.h"
 #include "UEKR2/Skill/Meteor.h"
+#include "../Effect/GhostTrail.h"
 
 AGreystone::AGreystone()
 {
@@ -17,8 +18,10 @@ AGreystone::AGreystone()
 
 	// GetMesh() : CharacterŬ������ ��������ִ� SkeletalMeshComponent�� ������ �Լ��̴�.
 	if (GreystoneAsset.Succeeded())
+	{
 		GetMesh()->SetSkeletalMesh(GreystoneAsset.Object);
-
+		m_PlayerMesh = GreystoneAsset.Object;
+	}
 	static ConstructorHelpers::FClassFinder<UAnimInstance>	GreystoneAnimAsset(TEXT("AnimBlueprint'/Game/Player/BPGreystoneAnim.BPGreystoneAnim_C'"));
 
 	if (GreystoneAnimAsset.Succeeded())
@@ -90,7 +93,14 @@ AGreystone::AGreystone()
 				
 		m_FallRecoveryMontage->BlendOut.SetBlendOption(EAlphaBlendOption::Cubic);
 		m_FallRecoveryMontage->BlendOut.SetBlendTime(0.1f);
-	}	
+	}
+
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> TrailAsset(TEXT("ParticleSystem'/Game/Particle/PSPlayerTrail.PSPlayerTrail'"));
+
+	if(TrailAsset.Succeeded())
+		m_Trail->SetTemplate(TrailAsset.Object);
+
+	
 	m_AttackIndex = 0;
 
 	m_PlayerInfo.Name = TEXT("Greystone");
@@ -107,13 +117,17 @@ AGreystone::AGreystone()
 	m_PlayerInfo.MoveSpeed = 600.f;
 
 	m_OnSkill3=false;
+
+	m_OnGhostTrail = false;
+	m_GhostTrailTime = 0.3f;
+	m_GhostTrailTimeAcc = 0.f;
 }
 
 // Called when the game starts or when spawned
 void AGreystone::BeginPlay()
 {
 	Super::BeginPlay();
-
+/*
 	// 등 뒤 무기
 	FActorSpawnParameters param;
 	param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -125,6 +139,7 @@ void AGreystone::BeginPlay()
 	m_Weapon->AttachToComponent(GetMesh(),FAttachmentTransformRules::KeepRelativeTransform,TEXT("BackWeapon"));
 
 	m_Weapon->SetMesh("SkeletalMesh'/Game/InfinityBladeWeapons/Weapons/Blade/Swords/Blade_BlackKnight/SK_Blade_BlackKnight.SK_Blade_BlackKnight'");
+*/
 }
 
 // Called every frame
@@ -144,6 +159,26 @@ void AGreystone::Tick(float DeltaTime)
 				m_Skill3Decal->SetActorLocation(result.ImpactPoint);
 		}
 	}
+/*
+	if(m_OnGhostTrail)
+	{
+		m_GhostTrailTimeAcc += DeltaTime;
+		if(m_GhostTrailTimeAcc >= m_GhostTrailTime)
+		{
+			m_GhostTrailTimeAcc -= m_GhostTrailTime;
+
+			FActorSpawnParameters param;
+			param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			// Ghost Trail 생성
+			AGhostTrail* Trail = GetWorld()->SpawnActor<AGhostTrail>(AGhostTrail::StaticClass(),
+				GetMesh()->GetComponentLocation(),
+				GetMesh()->GetComponentRotation(),
+				param);
+
+			Trail->SetMesh(m_PlayerMesh);
+			Trail->CopyAnimation(GetMesh());
+		}
+	}*/
 	
 }
 
@@ -167,6 +202,10 @@ void AGreystone::Attack()
 		{
 			m_AnimInstance->Montage_SetPosition(m_Skill3FireMontage, 0.f);
 			m_AnimInstance->Montage_Play(m_Skill3FireMontage);
+
+			
+			// Ghost Trail
+			OnGhostTrail();
 		}
 		m_AttackEnable = false;
 		m_OnSkill3=false;
@@ -187,7 +226,6 @@ void AGreystone::Attack()
 
 void AGreystone::Skill1()
 {
-	// 0�� ���� ����� ����� �ȵǰ� �ִٸ� ����� �����ش�.
 	if (!m_AnimInstance->Montage_IsPlaying(m_SkillMontageArray[0]))
 	{
 		m_AnimInstance->Montage_SetPosition(m_SkillMontageArray[0], 0.f);
@@ -213,6 +251,7 @@ void AGreystone::Skill3()
 	{
 		m_AnimInstance->Montage_SetPosition(m_SkillMontageArray[2], 0.f);
 		m_AnimInstance->Montage_Play(m_SkillMontageArray[2]);
+
 	}
 	
 }
@@ -226,7 +265,7 @@ void AGreystone::NormalAttack()
 
 	FCollisionQueryParams	params(NAME_None, false, this);
 
-	// ������������ �� Ÿ�ֿ̹� �浹ó���� ���ֵ��� �Ѵ�.
+	
 	TArray<FHitResult>	HitResultArray;
 	bool Sweep = GetWorld()->SweepMultiByChannel(HitResultArray, PlayerLoc,
 		PlayerLoc, FQuat::Identity,
@@ -235,30 +274,21 @@ void AGreystone::NormalAttack()
 
 	//LOG(TEXT("Attack : %.5f"), 200.f);
 	//LOG(TEXT("TestAttack"));
-	//PrintViewport(1.f, FColor::Yellow, TEXT("Attack"));
+	PrintViewport(1.f, FColor::Yellow, TEXT("Attack"));
 
 	TArray<FHitResult>	CollisionArray;
 	if (Sweep)
 	{
-		// 1�� ���浹�� �Ͼ Ÿ�ٰ� ������ ������ �����ش�.
-		//for (int32 i = 0; i < HitResultArray.Num(); ++i)
 		for (auto& result : HitResultArray)
 		{
 			FVector	Dir = result.ImpactPoint - GetActorLocation();
 
-			// ������ ���⺤�͸� �������ͷ� �����. �� ������ ���� ���·� üũ�� �ϱ� ���ؼ�
-			// ������ üũ����� �ϴµ� ���������� ������ �̿��ϰ� �ȴٸ� �� ���Ͱ� ������
-			// �ڻ��� ��Ÿ ���� ������ �� �ִ�.
-			// �׷��Ƿ� �̷��� �ڻ��� ��Ÿ�� ��ũ�ڻ����� �̿��Ͽ� ��Ÿ(����)�� �����ϰ�
-			// �̸� ���Ͽ� ���� �ȿ� ���������� �Ǵ��� �� �ִ�.
 			Dir.Normalize();
 
 			Forward = GetActorForwardVector();
 			Forward.Normalize();
 
 			float Dot = FVector::DotProduct(Dir, Forward);
-			// Acos�� �̿��ؼ� ������ ���ϸ� �� ���� Radian ������ ������ �ȴ�.
-			// �׷��Ƿ� �̸� Degree �� ��ȯ���ְ� �̸� ���ϴ� ������ ����Ѵ�.
 			float Angle = FMath::Acos(Dot);
 			Angle = FMath::RadiansToDegrees(Angle);
 
@@ -267,7 +297,6 @@ void AGreystone::NormalAttack()
 
 			else
 			{
-				// �̰� �ƴ϶�� ������ �̿��ؼ� ���� �浹ü�� �����ϴ��� �Ǵ��Ѵ�.
 			}
 		}
 	}
@@ -291,11 +320,12 @@ void AGreystone::NormalAttack()
 		ANormalEffect* Effect = GetWorld()->SpawnActor<ANormalEffect>(ANormalEffect::StaticClass(),
 			result.ImpactPoint, result.ImpactNormal.Rotation(), param);
 
-		// �ּ��� �ε��Ѵ�.
-		Effect->LoadParticle(TEXT("ParticleSystem'/Game/AdvancedMagicFX12/particles/P_ky_hit_thunder.P_ky_hit_thunder'"));
-
+		//Effect->LoadParticle(TEXT("ParticleSystem'/Game/AdvancedMagicFX12/particles/P_ky_hit_thunder.P_ky_hit_thunder'"));
+		Effect->LoadParticleAsync(TEXT("HitNormal"));
+		
 		// Sound
-		Effect->LoadSound(TEXT("SoundWave'/Game/Sound/Fire4.Fire4'"));
+		//Effect->LoadSound(TEXT("SoundWave'/Game/Sound/Fire4.Fire4'"));
+		Effect->LoadSoundAsync(TEXT("HitSword"));
 
 		// 데미지를 전달한다.
 		FDamageEvent DmgEvent;
@@ -343,8 +373,12 @@ void AGreystone::UseSkill(int32 Index)
 			param.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 			
 			m_Skill3Decal = GetWorld()->SpawnActor<AGreystoneSkill3Decal>(AGreystoneSkill3Decal::StaticClass(),
-				GetActorLocation()+FVector(100.f,0.f,0.f),
+				GetActorLocation()+FVector(0.f,0.f,0.f),
 				FRotator::ZeroRotator,param);
+				
+			FVector2D Screen=FVector2D::ZeroVector;
+			GetWorld()->GetFirstPlayerController()->ProjectWorldLocationToScreen(m_Skill3Decal->GetActorLocation(),Screen);
+			GetWorld()->GetFirstPlayerController()->SetMouseLocation(Screen.X,Screen.Y);
 			break;
 		}
 	break;
@@ -369,7 +403,6 @@ void AGreystone::UseSkillFire(int32 Index)
 			break;
 	}
 }
-
 
 
 void AGreystone::AttackCombo() {

@@ -26,7 +26,7 @@ void UAutionItemList::SetData(UObject* Data)
 	
 	m_NameText->SetText(FText::FromString(InvenData->GetNameText()));
 	
-	UTexture2D* IconTexture = LoadObject<UTexture2D>(nullptr,*InvenData->GetIconPath());
+	UTexture2D* IconTexture = InvenData->GetIcon();
 
 	if(IconTexture)
 		m_IconImage->SetBrushFromTexture(IconTexture);

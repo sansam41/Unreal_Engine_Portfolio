@@ -6,6 +6,7 @@
 #include "../Effect/NormalEffect.h"
 #include "UEKR2/Effect/MinionGunnerBullet.h"
 #include "UEKR2/Effect/WraithBullet.h"
+#include "UEKR2/Effect/WraithSkill1Bullet.h"
 
 AWraith::AWraith()
 {
@@ -15,8 +16,11 @@ AWraith::AWraith()
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh>	WraithAsset(TEXT("SkeletalMesh'/Game/ParagonWraith/Characters/Heroes/Wraith/Skins/LunarOps/Meshes/Wraith_LunarOps.Wraith_LunarOps'"));
 	
 	if (WraithAsset.Succeeded())
+	{
 		GetMesh()->SetSkeletalMesh(WraithAsset.Object);
-
+		m_PlayerMesh = WraithAsset.Object;
+	}
+	
 	static ConstructorHelpers::FClassFinder<UAnimInstance>	WraithAnimAsset(TEXT("AnimBlueprint'/Game/Player/BPWraithAnim.BPWraithAnim_C'"));
 
 	if (WraithAnimAsset.Succeeded())
@@ -26,21 +30,21 @@ AWraith::AWraith()
 
 	if (Attack1Asset.Succeeded())
 		m_AttackMontageArray.Add(Attack1Asset.Object);
-	/*
-	static ConstructorHelpers::FObjectFinder<UAnimMontage>	Skill1Asset(TEXT("AnimMontage'/Game/Player/AMGreystoneSkill1.AMGreystoneSkill1'"));
+	
+	static ConstructorHelpers::FObjectFinder<UAnimMontage>	Skill1Asset(TEXT("AnimMontage'/Game/Player/AMWraithSkill1.AMWraithSkill1'"));
 	if (Skill1Asset.Succeeded())
 		m_SkillMontageArray.Add(Skill1Asset.Object);
 
+	/*
 	static ConstructorHelpers::FObjectFinder<UAnimMontage>	Skill2Asset(TEXT("AnimMontage'/Game/Player/AMGreystoneSkill2.AMGreystoneSkill2'"));
 	if (Skill2Asset.Succeeded())
 		m_SkillMontageArray.Add(Skill2Asset.Object);
-
+*/
 	
-	 static ConstructorHelpers::FClassFinder<AActor>	Skill1Class(
-		TEXT("Blueprint'/Game/Player/Greystone/BPGreystoneSkill_1.BPGreystoneSkill_1_C'"));
+	 static ConstructorHelpers::FClassFinder<AActor>	Skill1Class(TEXT("Blueprint'/Game/Player/Wraith/BPWraithSkill1.BPWraithSkill1_C'"));
 	if (Skill1Class.Succeeded())
 		m_Skill1Class = Skill1Class.Class;
-		*/
+	
 
 
 		
@@ -99,7 +103,14 @@ void AWraith::Attack()
 
 void AWraith::Skill1()
 {
-
+	if (!m_AnimInstance->Montage_IsPlaying(m_SkillMontageArray[0]))
+	{
+		m_AttackEnable = false;
+		SetCasting(true);
+		m_AnimInstance->SetAttackEnable(true);
+		m_AnimInstance->Montage_SetPosition(m_SkillMontageArray[0], 0.f);
+		m_AnimInstance->Montage_Play(m_SkillMontageArray[0]);
+	}
 }
 
 
@@ -114,6 +125,12 @@ void AWraith::NormalAttack()
 	AWraithBullet* Bullet = GetWorld()->SpawnActor<AWraithBullet>(
 		AWraithBullet::StaticClass(),MuzzleLoc,GetActorRotation(),param);
 
+	ANormalEffect* Effect = GetWorld()->SpawnActor<ANormalEffect>(ANormalEffect::StaticClass(),
+		MuzzleLoc,GetActorRotation(),param);
+
+	Effect->LoadSound(TEXT("SoundWave'/Game/Sound/Gun11.Gun11'"));
+
+	
 	Bullet->SetAttack(m_PlayerInfo.Attack);
 	Bullet->SetOwner(this);
 }
@@ -127,6 +144,36 @@ void AWraith::AttackEnd()
 
 void AWraith::UseSkill(int32 Index)
 {
+	switch (Index)
+	{
+	case 0:
+		{
+			
+			FActorSpawnParameters param;
+			param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			FVector MuzzleLoc=GetMesh()->GetSocketLocation(TEXT("Muzzle_01"));
+			AWraithSkill1Bullet* Skill = GetWorld()->SpawnActor<AWraithSkill1Bullet>(m_Skill1Class,
+				MuzzleLoc,
+				GetActorRotation(),param);
+
+			ANormalEffect* Effect = GetWorld()->SpawnActor<ANormalEffect>(ANormalEffect::StaticClass(),
+				MuzzleLoc,GetActorRotation(),param);
+			Effect->LoadSound(TEXT("SoundWave'/Game/Sound/WaterShot.WaterShot'"));
+			
+			Skill->SetAttack(m_PlayerInfo.Attack);
+			Skill->SetOwner(this);
+			break;
+		}
+	case 1:
+		{
+			
+		}
+	case 2:
+		{
+		
+		}
+		break;
+	}
 }
 
 

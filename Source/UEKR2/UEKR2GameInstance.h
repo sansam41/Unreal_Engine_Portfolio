@@ -94,6 +94,8 @@ class UEKR2_API UUEKR2GameInstance : public UGameInstance
 	GENERATED_BODY()
 public:
 	UUEKR2GameInstance();
+	
+	~UUEKR2GameInstance();
 
 private:
 	UPROPERTY()
@@ -102,12 +104,25 @@ private:
 	UDataTable* m_PlayerInfoTable;
 	UPROPERTY()
 	UDataTable* m_UIItemInfoTable;
+	UPROPERTY()
+	UDataTable* m_QuestInfoTable;
 
 	EPlayerJob m_SelectJob;
 
 	FString m_PlayerName;
 
+	TMap<FString, FQuestData> m_QuestComplete;
+
 public:
+	const TMap<FString, FQuestData>& GetQuestData()
+	{
+		return m_QuestComplete;
+	}
+	
+	const FQuestData* FindQuestData(const FString& Name)
+	{
+		return m_QuestComplete.Find(Name);
+	}
 	void SetSelectJob(EPlayerJob Job)
 	{
 		m_SelectJob = Job;
@@ -132,4 +147,5 @@ public:
 	const FMonsterTableInfo* FindMonsterInfo(const FString& Name);
 	const FPlayerTableInfo* FindPlayerInfo(const FString& Name);
 	const FUIItemTableInfo* FindUIItemInfo(const FString& Name);
+	const FQuestTableInfo* FindQuestInfo(const FString& Name);
 };

@@ -16,6 +16,10 @@ class UEKR2_API AGreystoneSkill3Decal : public AEffectDecal
 	public:
 	AGreystoneSkill3Decal();
 	protected:
+	UMaterialInstanceDynamic* m_Material;
+	float m_Glow;
+	float m_Dir;
+	protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 

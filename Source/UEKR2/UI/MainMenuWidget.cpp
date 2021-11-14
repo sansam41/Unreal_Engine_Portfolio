@@ -16,6 +16,7 @@ void UMainMenuWidget::NativeConstruct()
 	m_InventoryButton->OnClicked.AddDynamic(this,&UMainMenuWidget::OnInventory);
 	m_CharacterStateButton->OnClicked.AddDynamic(this,&UMainMenuWidget::OnInventoryTile);
 	m_SkillButton->OnClicked.AddDynamic(this,&UMainMenuWidget::OnAuctionWidget);
+	m_OptionButton->OnClicked.AddDynamic(this,&UMainMenuWidget::OnQuestWidget);
 }
 void UMainMenuWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
@@ -54,5 +55,17 @@ void UMainMenuWidget::OnAuctionWidget()
 	else
 	{
 		m_AuctionWidget->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void UMainMenuWidget::OnQuestWidget()
+{
+	if(m_QuestWidget->GetVisibility()==ESlateVisibility::Collapsed)
+	{
+		m_QuestWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		m_QuestWidget->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }

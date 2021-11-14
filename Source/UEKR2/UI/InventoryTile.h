@@ -46,4 +46,7 @@ public:
 	void ItemScroll(UObject* Data,UUserWidget* widget);
 	UFUNCTION()
 	void ItemHovered(UObject* Data,bool Hovered);
+
+public:
+	void AddItem(const FUIItemTableInfo* ItemInfo);
 };

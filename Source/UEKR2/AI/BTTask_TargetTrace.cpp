@@ -5,6 +5,7 @@
 #include "../Player/PlayerCharacter.h"
 #include "../Monster/Monster.h"
 #include "../Monster/MonsterAIController.h"
+#include "UEKR2/RPG/Player/RPG_PlayerCharacter.h"
 
 UBTTask_TargetTrace::UBTTask_TargetTrace()
 {
@@ -30,7 +31,8 @@ EBTNodeResult::Type UBTTask_TargetTrace::ExecuteTask(UBehaviorTreeComponent& Own
 		return EBTNodeResult::Failed;
 
 
-	APlayerCharacter* Target = Cast<APlayerCharacter>(Controller->GetBlackboardComponent()->GetValueAsObject(("Target")));
+	//APlayerCharacter* Target = Cast<APlayerCharacter>(Controller->GetBlackboardComponent()->GetValueAsObject(("Target")));
+	ARPG_PlayerCharacter* Target = Cast<ARPG_PlayerCharacter>(Controller->GetBlackboardComponent()->GetValueAsObject(("Target")));
 
 	if (!Target)
 	{
@@ -77,10 +79,10 @@ void UBTTask_TargetTrace::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 	{
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return;
-	}	
-
-	APlayerCharacter* Target = Cast<APlayerCharacter>(Controller->GetBlackboardComponent()->GetValueAsObject(("Target")));
-
+	}
+	
+	//APlayerCharacter* Target = Cast<APlayerCharacter>(Controller->GetBlackboardComponent()->GetValueAsObject(("Target")));
+	ARPG_PlayerCharacter* Target = Cast<ARPG_PlayerCharacter>(Controller->GetBlackboardComponent()->GetValueAsObject(("Target")));
 	if (!Target)
 	{
 		Monster->ChangeAnimType(EMonsterAnimType::Idle);
@@ -88,6 +90,7 @@ void UBTTask_TargetTrace::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* Nod
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return;
 	}
+	
 
 	const FMonsterInfo& MonsterInfo = Monster->GetMonsterInfo();
 

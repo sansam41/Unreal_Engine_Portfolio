@@ -12,9 +12,13 @@
 #include "../UI/CharacterHUD.h"
 #include "../UI/HPBar.h"
 #include "Engine/TextureRenderTarget2D.h"
-
 #include "UEKR2/UEKR2GameInstance.h"
 #include "UEKR2/Material/PhysicalMaterialBase.h"
+#include "../Effect/GhostTrail.h"
+#include "../Network/PacketStream.h"
+#include "UEKR2/Network/NetworkManager.h"
+#include "UEKR2/Network/NetworkSession.h"
+#include "../UEKR2SaveGame.h"
 
 
 /*
@@ -32,6 +36,7 @@ APlayerCharacter::APlayerCharacter()
 	m_Arm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Arm"));
 	m_HPBar = CreateDefaultSubobject<UWidgetComponent>(TEXT("HPBar"));
 	m_Capture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("Capture"));
+	m_Trail = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Trail"));
 	
 
 	
@@ -39,6 +44,7 @@ APlayerCharacter::APlayerCharacter()
 	m_Arm->SetupAttachment(GetMesh());
 	m_Capture->SetupAttachment(GetMesh());
 	m_HPBar->SetupAttachment(GetMesh());
+	m_Trail->SetupAttachment(GetMesh());
 	
 	// Camera의 부모 Component로 m_Arm를 지정한다.
 	m_Camera->SetupAttachment(m_Arm);
@@ -84,7 +90,12 @@ APlayerCharacter::APlayerCharacter()
 	m_Capture->SetRelativeLocation(FVector(0.f,80.f,170.f));
 	m_Capture->SetRelativeRotation(FRotator(0.f,-90.f,0.f));
 	
+	m_PlayerMesh = nullptr;
 
+	
+	m_OnGhostTrail = false;
+	m_GhostTrailTime = 0.3f;
+	m_GhostTrailTimeAcc = 0.f;
 }
 
 // 게임이 시작될 때나 스폰될 때 호출되는 함수
@@ -116,13 +127,87 @@ void APlayerCharacter::BeginPlay()
 
 	m_Capture->ShowOnlyActors.Add(this);
 	
+	LOGSTRING(TestString);
+
+	// Save Data를 읽어온다.
+/*
+	UUEKR2SaveGame* LoadGame = Cast<UUEKR2SaveGame>(UGameplayStatics::LoadGameFromSlot(TEXT("Save1"),0));
+	if(LoadGame)
+	{
+		m_PlayerInfo = LoadGame->GetPlayerInfo();
+		SetActorLocation(LoadGame->GetPos());
+		SetActorScale3D(LoadGame->GetScale());
+		Controller->SetControlRotation(LoadGame->GetRot());
+	}
+	*/
+
+	FString FullPath = FString::Printf(TEXT("%s%s"),
+		*FPaths::ProjectSavedDir(),TEXT("SavePlayer.txt"));
+
+	TSharedPtr<FArchive> FileReader = MakeShareable(IFileManager::Get().CreateFileReader(*FullPath));
+
+	*FileReader.Get()  << m_PlayerInfo.Name;
+	*FileReader.Get()  << m_PlayerInfo.Armor;
+	*FileReader.Get()  << m_PlayerInfo.Attack;
+	*FileReader.Get()  << m_PlayerInfo.Exp;
+	*FileReader.Get()  << m_PlayerInfo.Gold;
+	*FileReader.Get()  << m_PlayerInfo.Job;
+	*FileReader.Get()  << m_PlayerInfo.Level;
+	*FileReader.Get()  << m_PlayerInfo.AttackAngle;
+	*FileReader.Get()  << m_PlayerInfo.AttackDistance;
+	*FileReader.Get()  << m_PlayerInfo.AttackSpeed;
+	*FileReader.Get()  << m_PlayerInfo.HP;
+	*FileReader.Get()  << m_PlayerInfo.HPMax;
+	*FileReader.Get()  << m_PlayerInfo.MP;
+	*FileReader.Get()  << m_PlayerInfo.MPMax;
+	*FileReader.Get()  << m_PlayerInfo.MoveSpeed;
+	FVector Pos, Scale;
+	FRotator Rot;
+
+	*FileReader.Get()<<Pos;
+	*FileReader.Get()<<Scale;
+	*FileReader.Get()<<Rot;
+
+	SetActorLocation(Pos);
+	Controller->SetControlRotation(Rot);
+	SetActorScale3D(Scale);
+	
+	// 서버에 현재 캐릭터의  위치를 넘겨준다.
+	NetworkSession* Session = NetworkManager::GetInst()->GetSession();
+
+	PacketStream	stream;
+	uint8 Packet[PACKET_SIZE]={};
+	
+	stream.SetBuffer(Packet);
+
+	//FVector Loc=GetActorLocation();
+	//FRotator Rot=GetActorRotation();
+	//FVector Scale=GetActorScale();
+
+	int32 Job = (int32)m_PlayerInfo.Job;
+	
+	stream.Write(&Job,sizeof(int32));
+	stream.Write(&Pos,sizeof(FVector));
+	stream.Write(&Scale,sizeof(FVector));
+	stream.Write(&Rot,sizeof(FRotator));
+	
+	Session->Write((int)NetworkProtocol::UserConnect,stream.GetLength(),Packet);
+	
 }
 
 // 매 프레임마다 호출
 void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+/*
+	if(GetCharacterMovement()->Velocity.Size()>0.f)
+	{
+		m_Trail->SetEmitterEnable(TEXT("Trail"),true);
+	}
+	else
+	{
+		m_Trail->SetEmitterEnable(TEXT("Trail"),false);
+	}*/
 }
 
 // 입력처리 때 호출
@@ -148,6 +233,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction(TEXT("Skill3"), EInputEvent::IE_Pressed,this,&APlayerCharacter::Skill3Key);
 	
 	PlayerInputComponent->BindAction(TEXT("ShowUI"), EInputEvent::IE_Pressed,this,&APlayerCharacter::changeShowUI);
+	
+	PlayerInputComponent->BindAction(TEXT("Save"), EInputEvent::IE_Pressed,this,&APlayerCharacter::GameSaveKey);
 
 }
 
@@ -201,6 +288,28 @@ void APlayerCharacter::MoveSideKey(float Scale)
 			else
 				m_AnimInstance->SetDirection(-135.f);
 		}
+		if(m_MoveKey)
+		{
+			if(!m_OnGhostTrail)
+			{
+				m_GhostTrailTimeAcc = 0.f;
+			}
+			
+			m_OnGhostTrail = true;
+		}
+		else if(GetCharacterMovement()->Velocity.Size()>0.f)
+		{
+			if(!m_OnGhostTrail)
+			{
+				m_GhostTrailTimeAcc = 0.f;
+			}
+			
+			m_OnGhostTrail = true;
+		}
+		else
+		{
+			m_OnGhostTrail = false;
+		}
 	}
 }
 
@@ -211,11 +320,17 @@ void APlayerCharacter::MoveSideKey(float Scale)
 void APlayerCharacter::CameraZoomKey(float Scale)
 {
 	m_Arm->TargetArmLength -= Scale * 20.f;
-	if (m_Arm->TargetArmLength < 30.f)
-		m_Arm->TargetArmLength = 30.f;
-
-	if (m_Arm->TargetArmLength > 300.f)
-		m_Arm->TargetArmLength = 300.f;
+	m_Arm->TargetOffset.Z-=Scale*20.f;
+	if (m_Arm->TargetArmLength < 200.f)
+	{
+		m_Arm->TargetArmLength = 200.f;
+		m_Arm->TargetOffset.Z = 200.f;
+	}
+	if (m_Arm->TargetArmLength > 500.f)
+	{
+		m_Arm->TargetArmLength = 500.f;
+		m_Arm->TargetOffset.Z = 500.f;
+	}
 }
 
 void APlayerCharacter::CameraLookUpKey(float Scale)
@@ -273,8 +388,8 @@ void APlayerCharacter::Skill1Key()
 {
 	if(m_Casting==true)
 		return;
+	
 	m_AttackEnable = false;
-	m_Casting=true;
 	Skill1();
 }
 
@@ -283,7 +398,7 @@ void APlayerCharacter::Skill2Key()
 	if(m_Casting==true)
 		return;
 	m_AttackEnable = false;
-	m_Casting=true;
+	SetCasting(true);
 	Skill2();
 }
 
@@ -292,8 +407,59 @@ void APlayerCharacter::Skill3Key()
 	if(m_Casting==true)
 		return;
 	m_AttackEnable = false;
-	m_Casting=true;
+	SetCasting(true);
 	Skill3();
+}
+
+void APlayerCharacter::GameSaveKey()
+{
+	/*
+	// 언리얼에서 지원하는 세이브 방식
+	UUEKR2SaveGame* SaveGame = NewObject<UUEKR2SaveGame>();
+
+	SaveGame->SetPlayerInfo(m_PlayerInfo);
+	SaveGame->SetPos(GetActorLocation());
+	SaveGame->SetRot(GetActorRotation());
+	SaveGame->SetScale(GetActorScale());
+
+	UGameplayStatics::SaveGameToSlot(SaveGame, "Save1",0);
+	*/
+	FString FullPath = FString::Printf(TEXT("%s%s"),
+		*FPaths::ProjectSavedDir(),TEXT("SavePlayer.txt"));
+
+	FArchive* Writer =  IFileManager::Get().CreateFileWriter(*FullPath);
+
+	if(Writer)
+	{
+		*Writer << m_PlayerInfo.Name;
+		*Writer << m_PlayerInfo.Armor;
+		*Writer << m_PlayerInfo.Attack;
+		*Writer << m_PlayerInfo.Exp;
+		*Writer << m_PlayerInfo.Gold;
+		*Writer << m_PlayerInfo.Job;
+		*Writer << m_PlayerInfo.Level;
+		*Writer << m_PlayerInfo.AttackAngle;
+		*Writer << m_PlayerInfo.AttackDistance;
+		*Writer << m_PlayerInfo.AttackSpeed;
+		*Writer << m_PlayerInfo.HP;
+		*Writer << m_PlayerInfo.HPMax;
+		*Writer << m_PlayerInfo.MP;
+		*Writer << m_PlayerInfo.MPMax;
+		*Writer << m_PlayerInfo.MoveSpeed;
+
+		FVector Pos, Scale;
+		Pos = GetActorLocation();
+		Scale = GetActorScale();
+		FRotator Rot = GetActorRotation();
+		
+		*Writer <<Pos;
+		*Writer <<Scale;
+		*Writer <<Rot;
+
+		Writer->Close();
+
+		delete Writer;
+	}
 }
 
 
@@ -315,6 +481,7 @@ void APlayerCharacter::changeShowUI()
 		PlayerController->m_ShowUI=true;
 	}
 }
+
 
 void APlayerCharacter::PlayFallRecovery()
 {
@@ -367,6 +534,18 @@ void APlayerCharacter::UseSkillFire(int32 Index)
 {
 }
 
+void APlayerCharacter::GhostTrailEnd()
+{
+	m_OnGhostTrail =false;
+	m_GhostTrailTimeAcc=0.f;
+}
+
+void APlayerCharacter::OnGhostTrail()
+{
+	
+	m_OnGhostTrail =true;
+	m_GhostTrailTimeAcc=0.f;
+}
 
 float APlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {

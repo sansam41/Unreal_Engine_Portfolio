@@ -2,6 +2,8 @@
 
 
 #include "NormalEffect.h"
+#include "../AssetManager/AssetPathMain.h"
+#include "Engine/AssetManager.h"
 
 // Sets default values
 ANormalEffect::ANormalEffect()
@@ -54,3 +56,58 @@ void ANormalEffect::ParticleFinish(UParticleSystemComponent* Particle) {
 	Destroy();
 }
 
+
+void ANormalEffect::LoadParticleAsync(const FString& Name)
+{
+	UAssetPathMain* AssetPath = UAssetPathMain::StaticClass()->GetDefaultObject<UAssetPathMain>();
+
+	const FSoftObjectPath* Path=AssetPath->FindParticlePath(Name);
+	
+	if(!Path)
+		return;
+
+	m_AsyncParticlePath = *Path;
+
+	FStreamableManager& streamMgr = UAssetManager::GetStreamableManager();
+
+	m_AsyncParticleLoadHandle = streamMgr.RequestAsyncLoad(m_AsyncParticlePath,
+		FStreamableDelegate::CreateUObject(this,&ANormalEffect::LoadParticleAsyncComplete));
+}
+
+void ANormalEffect::LoadSoundAsync(const FString& Name)
+{
+	UAssetPathMain* AssetPath = UAssetPathMain::StaticClass()->GetDefaultObject<UAssetPathMain>();
+
+	const FSoftObjectPath* Path=AssetPath->FindSoundPath(Name);
+	
+	if(!Path)
+		return;
+
+	m_AsyncSoundPath = *Path;
+
+	FStreamableManager& streamMgr = UAssetManager::GetStreamableManager();
+
+	m_AsyncSoundLoadHandle = streamMgr.RequestAsyncLoad(m_AsyncSoundPath,
+		FStreamableDelegate::CreateUObject(this,&ANormalEffect::LoadSoundAsyncComplete));
+}
+
+void ANormalEffect::LoadParticleAsyncComplete()
+{
+	m_AsyncParticleLoadHandle->ReleaseHandle();
+
+	//로딩해 놓은 파티클을 저장한다.
+	TAssetPtr<UParticleSystem> NewParticle(m_AsyncParticlePath);
+	if(NewParticle)
+		m_ParticleSystem->SetTemplate(NewParticle.Get());
+}
+void ANormalEffect::LoadSoundAsyncComplete()
+{
+	m_AsyncSoundLoadHandle->ReleaseHandle();
+
+	//로딩해 놓은 파티클을 저장한다.
+	TAssetPtr<USoundBase> NewSound(m_AsyncSoundPath);
+
+	if(NewSound)
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), NewSound.Get(), GetActorLocation());
+	
+}

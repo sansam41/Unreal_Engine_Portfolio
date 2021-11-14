@@ -104,7 +104,7 @@ public:
 	void AnimNotify_FallRecoveryEnd();
 
 	UFUNCTION()
-	void AnimNotify_SkillFire();
+	void AnimNotify_SkillFire1();
 
 	UFUNCTION()
 	void AnimNotify_SkillFire2();
@@ -118,5 +118,9 @@ public:
 	void AnimNotify_RightStep();
 	UFUNCTION()
 	void AnimNotify_LeftStep();
+	UFUNCTION()
+	void AnimNotify_GhostTrailEnd();
+	UFUNCTION()
+	void AnimNotify_IdleStart();
 
 };

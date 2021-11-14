@@ -29,6 +29,8 @@ AWraithBullet::AWraithBullet()
 void AWraithBullet::BeginPlay()
 {
 	Super::BeginPlay();
+	FActorSpawnParameters param;
+	param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	
 }
 
@@ -53,7 +55,7 @@ void AWraithBullet::StopEvent(const FHitResult& result)
 	Effect->LoadParticle(TEXT("ParticleSystem'/Game/AdvancedMagicFX13/Particles/P_ky_flash1.P_ky_flash1'"));
 
 	// Sound
-	Effect->LoadSound(TEXT("SoundWave'/Game/Sound/Fire4.Fire4'"));
+	Effect->LoadSound(TEXT("SoundWave'/Game/Sound/Gun12.Gun12'"));
 	
 	m_Particle->DestroyComponent();
 
@@ -63,4 +65,5 @@ void AWraithBullet::StopEvent(const FHitResult& result)
 
 		result.GetActor()->TakeDamage(m_Attack,DmgEvent,m_Owner->GetController(),m_Owner);
 	}
+	this->Destroy();
 }

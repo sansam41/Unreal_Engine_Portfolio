@@ -13,12 +13,15 @@ ASelectPlayerController::ASelectPlayerController()
 	bShowMouseCursor=true;
 	m_LButtonClick=false;
 	m_SelectJob = EPlayerJob::End;
+
+	m_SelectCharacter = nullptr;
 	
 }
 void ASelectPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
 	
+	Picking();
 }
 void ASelectPlayerController::SetupInputComponent()
 {
@@ -33,7 +36,70 @@ void ASelectPlayerController::SetupInputComponent()
 void ASelectPlayerController::MouseClick()
 {
 	m_LButtonClick=true;
-	Picking();
+
+	if(m_SelectCharacter)
+	{
+		ACharacterSelectGameMode* GameMode = Cast<ACharacterSelectGameMode>(
+				GetWorld()->GetAuthGameMode());
+
+		if(GameMode)
+		{
+			ASelectPlayer* SelectPlayer = Cast<ASelectPlayer>(m_SelectCharacter);
+			
+			UCharacterSelectHUD* SelectHUD=GameMode->GetSelectHUD();
+
+			if(SelectHUD)
+			{
+				SelectHUD->EnableStartButton(true);
+				m_SelectJob =SelectPlayer->GetPlayerJob();
+
+				UUEKR2GameInstance* GameInst = Cast<UUEKR2GameInstance>(GetWorld()->GetGameInstance());
+
+				if(GameInst)
+				{
+					GameInst->SetSelectJob(m_SelectJob);
+				}
+
+					
+				switch (m_SelectJob)
+				{
+				case EPlayerJob::Knight:
+					SelectHUD->SetKnightStateVisibility(ESlateVisibility::SelfHitTestInvisible);
+					SelectHUD->SetInputNameVisibility(ESlateVisibility::SelfHitTestInvisible);
+					SelectHUD->SetArcherStateVisibility(ESlateVisibility::Collapsed);
+					break;
+				case EPlayerJob::Archer:
+					SelectHUD->SetArcherStateVisibility(ESlateVisibility::SelfHitTestInvisible);
+					SelectHUD->SetInputNameVisibility(ESlateVisibility::SelfHitTestInvisible);
+					SelectHUD->SetKnightStateVisibility(ESlateVisibility::Collapsed);
+					break;
+				case EPlayerJob::Mage:
+					break;;
+				}
+			}
+				
+		}
+	}
+	else
+	{
+		ACharacterSelectGameMode* GameMode = Cast<ACharacterSelectGameMode>(
+		GetWorld()->GetAuthGameMode());
+
+		if(GameMode)
+		{
+			UCharacterSelectHUD* SelectHUD=GameMode->GetSelectHUD();
+
+			if(SelectHUD)
+			{
+				SelectHUD->EnableStartButton(false);
+				SelectHUD->SetKnightStateVisibility(ESlateVisibility::Collapsed);
+				SelectHUD->SetArcherStateVisibility(ESlateVisibility::Collapsed);
+				SelectHUD->SetInputNameVisibility(ESlateVisibility::Collapsed);
+			}
+				
+		}
+	}
+	
 }
 void ASelectPlayerController::MouseRelese()
 {
@@ -51,83 +117,42 @@ void ASelectPlayerController::Picking()
 		ASelectPlayer* SelectPlayer = Cast<ASelectPlayer>(result.GetActor());
 		if(SelectPlayer)
 		{
-			SelectPlayer->SetPlayerAnimSelect();
-			ACharacterSelectGameMode* GameMode = Cast<ACharacterSelectGameMode>(
-				GetWorld()->GetAuthGameMode());
-
-			if(GameMode)
+			if (m_SelectCharacter != SelectPlayer)
 			{
-				UCharacterSelectHUD* SelectHUD=GameMode->GetSelectHUD();
+				if (m_SelectCharacter)
+					m_SelectCharacter->GetMesh()->SetCustomDepthStencilValue(255);
 
-				if(SelectHUD)
-				{
-					SelectHUD->EnableStartButton(true);
-					m_SelectJob =SelectPlayer->GetPlayerJob();
+				m_SelectCharacter = SelectPlayer;
 
-					UUEKR2GameInstance* GameInst = Cast<UUEKR2GameInstance>(GetWorld()->GetGameInstance());
-
-					if(GameInst)
-					{
-						GameInst->SetSelectJob(m_SelectJob);
-					}
-
-					
-					switch (m_SelectJob)
-					{
-					case EPlayerJob::Knight:
-						SelectHUD->SetKnightStateVisibility(ESlateVisibility::SelfHitTestInvisible);
-						SelectHUD->SetInputNameVisibility(ESlateVisibility::SelfHitTestInvisible);
-						SelectHUD->SetArcherStateVisibility(ESlateVisibility::Collapsed);
-						break;
-					case EPlayerJob::Archer:
-						SelectHUD->SetArcherStateVisibility(ESlateVisibility::SelfHitTestInvisible);
-						SelectHUD->SetInputNameVisibility(ESlateVisibility::SelfHitTestInvisible);
-						SelectHUD->SetKnightStateVisibility(ESlateVisibility::Collapsed);
-						break;
-					case EPlayerJob::Mage:
-						break;;
-					}
-				}
+				if(SelectPlayer->GetPlayerJob()==EPlayerJob::Knight)
+					m_SelectCharacter->GetMesh()->SetCustomDepthStencilValue(1);
 				
+				if(SelectPlayer->GetPlayerJob()==EPlayerJob::Archer)
+					m_SelectCharacter->GetMesh()->SetCustomDepthStencilValue(3);
+
+				if(SelectPlayer->GetPlayerAnimType()==ESelectPlayerAnimType::IdleStart)
+					SelectPlayer->SetPlayerAnimSelect();
 			}
+
+
+			
 		}
 		else
 		{
-			ACharacterSelectGameMode* GameMode = Cast<ACharacterSelectGameMode>(
-				GetWorld()->GetAuthGameMode());
-
-			if(GameMode)
+			if(m_SelectCharacter)
 			{
-				UCharacterSelectHUD* SelectHUD=GameMode->GetSelectHUD();
-
-				if(SelectHUD)
-				{
-					SelectHUD->EnableStartButton(false);
-					SelectHUD->SetKnightStateVisibility(ESlateVisibility::Collapsed);
-					SelectHUD->SetArcherStateVisibility(ESlateVisibility::Collapsed);
-					SelectHUD->SetInputNameVisibility(ESlateVisibility::Collapsed);
-				}
-				
+				m_SelectCharacter->GetMesh()->SetCustomDepthStencilValue(255);
+				m_SelectCharacter = nullptr;
 			}
 		}
 	}
 	
 	else
 	{
-		ACharacterSelectGameMode* GameMode =
-			Cast<ACharacterSelectGameMode>(GetWorld()->GetAuthGameMode());
-
-		if (GameMode)
+		if (m_SelectCharacter)
 		{
-			UCharacterSelectHUD* SelectHUD = GameMode->GetSelectHUD();
-
-			if (SelectHUD)
-			{
-				SelectHUD->EnableStartButton(false);
-				SelectHUD->SetKnightStateVisibility(ESlateVisibility::Collapsed);
-				SelectHUD->SetArcherStateVisibility(ESlateVisibility::Collapsed);
-				SelectHUD->SetInputNameVisibility(ESlateVisibility::Collapsed);
-			}
+			m_SelectCharacter->GetMesh()->SetCustomDepthStencilValue(255);
+			m_SelectCharacter = nullptr;
 		}
 	}
 }

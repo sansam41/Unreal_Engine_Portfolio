@@ -10,7 +10,7 @@
 
 
 
-UCLASS()
+UCLASS(config=MainAsset)
 class UEKR2_API APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
@@ -34,6 +34,9 @@ protected:
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess="true"))
 	USceneCaptureComponent2D* m_Capture;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess="true"))
+	UParticleSystemComponent* m_Trail;
 
 	UAnimMontage* m_FallRecoveryMontage;
 
@@ -44,11 +47,22 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	FPlayerInfo m_PlayerInfo;
 
+	bool m_OnGhostTrail;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess="true"))
+	float m_GhostTrailTime;
+	
+	float m_GhostTrailTimeAcc;
+	
+	USkeletalMesh* m_PlayerMesh;
+
 
 	bool m_MoveKey;
 	bool m_AttackEnable;
 	bool m_Death;
 	bool m_Attack;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess="true"))
 	bool m_Casting;
 	bool m_ShowUI;
 
@@ -58,7 +72,8 @@ protected:
 	class UPlayerAnim* m_AnimInstance;
 
 public:
-
+	UPROPERTY(Config)
+	FString TestString;
 public:
 	const FPlayerInfo& GetPlayerInfo() const {
 		return m_PlayerInfo;
@@ -73,13 +88,19 @@ public:
 
 	void SetCasting(bool Cast)
 	{
+
 		m_Casting=Cast;
+
 	}
 	bool GetShowUI()
 	{
 		return m_ShowUI;
 	}
 
+	FVector GetCameraLocation() const
+	{
+		return m_Camera->GetComponentLocation();
+	}
 	
 	
 	
@@ -110,6 +131,7 @@ public:
 	void Skill1Key();
 	void Skill2Key();
 	void Skill3Key();
+	void GameSaveKey();
 	void PlayFallRecovery();
 
 	void changeShowUI();
@@ -127,6 +149,10 @@ public:
 	virtual void AttackCombo();
 	virtual void UseSkill(int32 Index);
 	virtual void UseSkillFire(int32 Index);
+
+
+	void GhostTrailEnd();
+	void OnGhostTrail();
 
 
 public:

@@ -4,6 +4,7 @@
 
 #include "../GameInfo.h"
 #include "GameFramework/PlayerController.h"
+#include "UEKR2/Environment/EnvironmentNormalActor.h"
 #include "MainPlayerController.generated.h"
 
 /**
@@ -17,7 +18,7 @@ class UEKR2_API AMainPlayerController : public APlayerController
 public:
 	AMainPlayerController();
 private:
-
+	TArray<class AEnvironmentNormalActor*> m_CollisionEnvironmentActor;
 public:
 	bool m_ShowUI;
 public:

@@ -10,13 +10,24 @@ AGreystoneSkill1::AGreystoneSkill1()
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	
 	m_Particle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Particle"));
+	m_Trail = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Trail"));
+	
 	m_Particle->SetupAttachment(m_Body);
+
+	m_Trail->SetupAttachment(m_Body);
+
+	
 	m_Damage=100.f;
 
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> Asset(TEXT("ParticleSystem'/Game/AdvancedMagicFX13/Particles/P_ky_cutter2.P_ky_cutter2'"));
 	if (Asset.Succeeded())
 		m_Particle->SetTemplate(Asset.Object);
+	
+	static ConstructorHelpers::FObjectFinder<UParticleSystem> Asset1(TEXT("ParticleSystem'/Game/Particle/PSPlayerTrail.PSPlayerTrail'"));
+	if (Asset1.Succeeded())
+		m_Trail->SetTemplate(Asset1.Object);
 }
 
 // Called when the game starts or when spawned
@@ -46,10 +57,11 @@ void AGreystoneSkill1::StopEvent(const FHitResult& result)
 		result.ImpactPoint, result.ImpactNormal.Rotation(), param);
 
 	// 애셋을 로딩한다.
-	Effect->LoadParticle(TEXT("ParticleSystem'/Game/AdvancedMagicFX13/Particles/P_ky_explosion3.P_ky_explosion3'"));
-
+	//Effect->LoadParticle(TEXT("ParticleSystem'/Game/AdvancedMagicFX13/Particles/P_ky_explosion3.P_ky_explosion3'"));
+	Effect->LoadParticleAsync(TEXT("HitFire"));
 	// Sound
-	Effect->LoadSound(TEXT("SoundWave'/Game/Sound/Fire4.Fire4'"));
+	//Effect->LoadSound(TEXT("SoundWave'/Game/Sound/Fire4.Fire4'"));
+	Effect->LoadSoundAsync(TEXT("HitFire"));
 
 	m_Particle->DestroyComponent();
 
@@ -75,5 +87,6 @@ void AGreystoneSkill1::StopEvent(const FHitResult& result)
 		AGreystoneSkill1Decal* Decal = GetWorld()->SpawnActor<AGreystoneSkill1Decal>(AGreystoneSkill1Decal::StaticClass(),
 			LineResult.ImpactPoint, FRotator::ZeroRotator, param1);
 	}
+	this->Destroy();
 }
 

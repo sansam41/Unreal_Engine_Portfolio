@@ -42,7 +42,9 @@ protected:
 
 	bool m_OnSkill3;
 
+
 	class AGreystoneSkill3Decal* m_Skill3Decal;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

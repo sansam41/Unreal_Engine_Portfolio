@@ -4,12 +4,14 @@
 #include "InventoryList.h"
 #include "../UEKR2GameInstance.h"
 #include "InventoryItemDataList.h"
+#include "UEKR2/UEKR2GameModeBase.h"
 
 void UInventoryList::NativeConstruct()
 {
 	Super::NativeConstruct();
 
 	m_InventoryList = Cast<UListView>(GetWidgetFromName(TEXT("InventoryList")));
+/*
 	FString ItemNameArray[4]=
 	{
 		TEXT("BF대검"),
@@ -29,12 +31,12 @@ void UInventoryList::NativeConstruct()
 		UInventoryItemDataList* Data=NewObject<UInventoryItemDataList>(this,UInventoryItemDataList::StaticClass());
 
 		Data->SetNameText(Info->Name);
-		Data->SetIconPath(Info->IconPath);
+		Data->SetIcon(Info->IconTexture);
 		Data->SetIndex(i);
 		
 		m_InventoryList->AddItem(Data);
 	}
-
+*/
 	// 클릭했을 때 동작할 함수를 등록한다.
 	m_InventoryList->OnItemClicked().AddUObject(this,&UInventoryList::ItemClick);
 	//m_InventoryList->OnItemSelectionChanged()
@@ -50,11 +52,24 @@ void UInventoryList::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 void UInventoryList::ItemClick(UObject* Data)
 {
 	UInventoryItemDataList* Item = Cast<UInventoryItemDataList>(Data);
-
+	AUEKR2GameModeBase* GameMode = Cast<AUEKR2GameModeBase>(GetWorld()->GetAuthGameMode());
 	if(Item)
 	{
 		m_InventoryList->RemoveItem(Data);
 		PrintViewport(1.f,FColor::Red,Item->GetNameText());
 	}
 	
+}
+
+
+
+void UInventoryList::AddItem(const FUIItemTableInfo* ItemInfo)
+{
+	UInventoryItemDataList* Data=NewObject<UInventoryItemDataList>(this,UInventoryItemDataList::StaticClass());
+
+	Data->SetNameText(ItemInfo->Name);
+	Data->SetIcon(ItemInfo->IconTexture);
+	Data->SetIndex(m_InventoryList->GetNumItems());
+		
+	m_InventoryList->AddItem(Data);
 }

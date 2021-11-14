@@ -22,7 +22,7 @@ protected:
 	FString m_NameText;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess = "true"))
-	FString m_IconPath;
+	UTexture2D* m_Icon;
 	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess = "true"))
 	int32 m_Index;
@@ -34,9 +34,9 @@ public:
 		return m_NameText;
 	}
 
-	FString GetIconPath()
+	UTexture2D* GetIcon()
 	{
-		return m_IconPath;
+		return m_Icon;
 	}
 	
 	int32 GetIndex()
@@ -50,9 +50,9 @@ public:
 		m_NameText = NameText;
 	}
 	
-	void SetIconPath(const FString& Path)
+	void SetIcon(UTexture2D* Icon)
 	{
-		m_IconPath = Path;
+		m_Icon = Icon;
 	}
 
 	void SetIndex(int32 Index)

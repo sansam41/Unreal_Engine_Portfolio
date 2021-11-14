@@ -3,6 +3,7 @@
 
 #include "PlayerAnim.h"
 #include "PlayerCharacter.h"
+#include "UEKR2/RPG/Player/RPG_PlayerCharacter.h"
 
 UPlayerAnim::UPlayerAnim() {
 	m_Direction = 0;
@@ -21,15 +22,13 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds) {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
 	APlayerCharacter* Player = Cast<APlayerCharacter>(TryGetPawnOwner());
-
 	if (Player) {
 		UCharacterMovementComponent* Movement = Player->GetCharacterMovement();
-
+		
 		if (Movement)
 		{
 			// 속도를 구한다
 			m_Speed = Movement->Velocity.Size();
-
 
 			// 땅을 밟고 있는지 구한다.
 			bool OnGround = Movement->IsMovingOnGround();
@@ -92,7 +91,7 @@ void UPlayerAnim::AnimNotify_AttackCombo() {
 		Player->EnableAttack(true);
 }
 
-void UPlayerAnim::AnimNotify_SkillFire() {
+void UPlayerAnim::AnimNotify_SkillFire1() {
 	//m_Attack = false;
 	APlayerCharacter* Player = Cast<APlayerCharacter>(TryGetPawnOwner());
 
@@ -109,6 +108,7 @@ void UPlayerAnim::AnimNotify_SkillFire2() {
 	if (Player)
 	{
 		Player->UseSkill(1);
+		
 	}
 }
 
@@ -148,4 +148,20 @@ void UPlayerAnim::AnimNotify_SkillEnd()
 		Player->AttackEnd();
 		Player->SetCasting(false);
 	}
+}
+void UPlayerAnim::AnimNotify_GhostTrailEnd()
+{
+	
+	APlayerCharacter* Player = Cast<APlayerCharacter>(TryGetPawnOwner());
+
+	if(Player)
+	{
+		
+		Player->GhostTrailEnd();
+	}
+}
+
+void UPlayerAnim::AnimNotify_IdleStart()
+{
+	
 }

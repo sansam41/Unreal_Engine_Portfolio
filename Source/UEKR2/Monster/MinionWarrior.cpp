@@ -21,6 +21,8 @@ AMinionWarrior::AMinionWarrior()
 
 	m_MonsterInfoName = TEXT("MinionWarrior");
 	
+	m_DropItemNameArray.Add(TEXT("BFëŒ€ê²€"));
+	m_DropItemNameArray.Add(TEXT("HPí¬ì…˜"));
 }
 
 // Called when the game starts or when spawned
@@ -39,13 +41,13 @@ void AMinionWarrior::Tick(float DeltaTime)
 
 void AMinionWarrior::NormalAttack()
 {
-	// Å¸°Ý ÀÌÆåÆ® Ã³¸®
+	// íƒ€ê²© ì´íŽ™íŠ¸ ì²˜ë¦¬
 	FVector	MonsterLoc = GetActorLocation();
 	FVector	Forward = GetActorForwardVector();
 
 	FCollisionQueryParams	params(NAME_None, false, this);
 
-	// ±ÙÁ¢°ø°Ý
+	// ê·¼ì ‘ê³µê²©
 	FHitResult	result;
 	bool Sweep = GetWorld()->SweepSingleByChannel(result, MonsterLoc,
 		MonsterLoc + Forward * m_MonsterInfo.AttackDistance, FQuat::Identity,
@@ -76,9 +78,9 @@ void AMinionWarrior::NormalAttack()
 		Effect->LoadParticle(TEXT("ParticleSystem'/Game/AdvancedMagicFX13/Particles/P_ky_flash1.P_ky_flash1'"));
 
 
-		Effect->LoadSound(TEXT("SoundWave'/Game/Sound/Fire4.Fire4'"));
+		Effect->LoadSound(TEXT("SoundWave'/Game/Sound/Sword1.Sword1'"));
 
-		// µ¥¹ÌÁö¸¦ Àü´ÞÇÑ´Ù.
+		// ë°ë¯¸ì§€ë¥¼ ì „ë‹¬í•œë‹¤.
 		FDamageEvent DmgEvent;
 		result.GetActor()->TakeDamage(m_MonsterInfo.Attack, DmgEvent, GetController(),this);
 	}

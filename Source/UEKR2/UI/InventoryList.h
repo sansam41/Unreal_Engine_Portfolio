@@ -29,4 +29,7 @@ protected:
 public:
 	UFUNCTION()
 	void ItemClick(UObject* Data);
+
+public:
+	void AddItem(const FUIItemTableInfo* ItemInfo);
 };
