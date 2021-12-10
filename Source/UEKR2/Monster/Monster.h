@@ -117,6 +117,9 @@ protected:
 	TArray<FString> m_DropItemNameArray;
 
 	bool IsDead;
+public:
+	bool m_Boss;
+	bool m_BattleStart;
 
 public:
 	bool GetPatrolWait();
@@ -158,7 +161,11 @@ public:
 	}
 
 	EMonsterAnimType GetAnimType()	const;
-
+	void ChangeAnimType(EMonsterAnimType Type);
+	
+	EMonsterAttackType GetAttackType()	const;
+	void ChangeAttackType(EMonsterAttackType Type);
+	
 	bool GetAttackEnd()	const
 	{
 		return m_AttackEnd;
@@ -169,7 +176,7 @@ public:
 		m_AttackEnd = AttackEnd;
 	}
 
-	void ChangeAnimType(EMonsterAnimType Type);
+	
 
 	void SetSpawnPoint(class AMonsterSpawnPoint* SpawnPoint)
 	{

@@ -61,6 +61,17 @@ public:
 		m_AnimType = Type;
 	}
 
+	
+	EMonsterAttackType GetAttackType() const
+	{
+		return m_AttackType;
+	}
+
+	void ChangeAttackType(EMonsterAttackType Type)
+	{
+		m_AttackType = Type;
+	}
+
 	void SetHit()
 	{
 		m_Hit=1.f;
@@ -73,14 +84,14 @@ public:
 
 public:
 	UFUNCTION()
-	void AnimNotify_Attack();
+	virtual void AnimNotify_Attack();
 
 	UFUNCTION()
-	void AnimNotify_AttackEnd();
+	virtual void AnimNotify_AttackEnd();
 
 	UFUNCTION()
-	void AnimNotify_DeathEnd();
+	virtual void AnimNotify_DeathEnd();
 	
 	UFUNCTION()
-	void AnimNotify_HitEnd();
+	virtual void AnimNotify_HitEnd();
 };

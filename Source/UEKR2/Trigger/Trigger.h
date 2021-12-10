@@ -30,6 +30,8 @@ protected:
 	UPROPERTY(BlueprintAssignable, Category= "Collision")
 	FTriggerDelegate m_TriggerEndDelegate;
 
+	AActor* m_Other;
+
 public:
 	FTriggerDelegate& GetBeginDelegate()
 	{

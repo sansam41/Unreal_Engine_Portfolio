@@ -46,7 +46,7 @@ void UCharacterSelectHUD::StartButton()
 	{
 		GameInst->SetPlayerName(InputName);
 	}
-	UGameplayStatics::OpenLevel(GetWorld(),TEXT("Main"));
+	UGameplayStatics::OpenLevel(GetWorld(),TEXT("RPGMain"));
 }
 
 void UCharacterSelectHUD::BackButton()

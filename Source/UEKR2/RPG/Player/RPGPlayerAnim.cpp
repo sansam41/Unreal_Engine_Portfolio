@@ -2,6 +2,8 @@
 
 
 #include "RPGPlayerAnim.h"
+
+#include "RPG_Knight.h"
 #include "RPG_PlayerCharacter.h"
 
 
@@ -32,7 +34,6 @@ void URPGPlayerAnim::NativeUpdateAnimation(float DeltaSeconds) {
 			// ¶¥À» ¹â°í ÀÖ´ÂÁö ±¸ÇÑ´Ù.
 			bool OnGround = Movement->IsMovingOnGround();
 				
-
 			//if (!m_OnGround && OnGround && Player->IsMoveKey())
 			//	m_AnimType = EPlayerAnimType::Ground;
 			
@@ -155,4 +156,23 @@ void URPGPlayerAnim::AnimNotify_SkillEnd()
 void URPGPlayerAnim::AnimNotify_IdleStart()
 {
 	
+}
+void URPGPlayerAnim::AnimNotify_HitedEnd()
+{
+	ARPG_Knight* Player = Cast<ARPG_Knight>(TryGetPawnOwner());
+
+	if(Player)
+	{
+		Player->m_BeHited =false;
+	}
+}
+void URPGPlayerAnim::AnimNotify_RollEnd()
+{
+	ARPG_PlayerCharacter* Player = Cast<ARPG_PlayerCharacter>(TryGetPawnOwner());
+
+	if(Player)
+	{
+		Player->m_Rolling = false;
+		Player->GetCharacterMovement()->MaxWalkSpeed /=1.5; 
+	}
 }

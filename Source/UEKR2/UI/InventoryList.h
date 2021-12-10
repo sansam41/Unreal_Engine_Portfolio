@@ -9,6 +9,8 @@
 #include "Blueprint/UserWidget.h"
 #include "InventoryList.generated.h"
 
+DECLARE_DELEGATE(FInventoryInit)
+
 /**
  * 
  */
@@ -19,6 +21,10 @@ class UEKR2_API UInventoryList : public UUserWidget
 protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess = "true"))
 	UListView*  m_InventoryList;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess = "true"))
+	UTextBlock*  m_GoldText;
+
+	FInventoryInit m_InventoryInitDelegate;
 
 public:
 
@@ -32,4 +38,13 @@ public:
 
 public:
 	void AddItem(const FUIItemTableInfo* ItemInfo);
+	bool FindItem(const FString& ItemName);
+	void SetGold(int32 Gold);
+
+public:
+	template <typename T>
+	void SetInventoryInitDelegate(T* Obj, void(T::* Func)())
+	{
+		m_InventoryInitDelegate.BindUObject(Obj,Func);
+	}
 };

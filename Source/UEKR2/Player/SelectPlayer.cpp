@@ -5,6 +5,7 @@
 #include "../CharacterSelectGameMode.h"
 #include "../UI/CharacterSelectHUD.h"
 #include "../UI/CharacterSelectState.h"
+#include "UEKR2/Player/Weapon.h"
 #include "../UEKR2GameInstance.h"
 
 // Sets default values
@@ -66,13 +67,39 @@ void ASelectPlayer::BeginPlay()
 			switch(m_Job)
 			{
 			case EPlayerJob::Knight:
-				SelectHUD->SetKnightInfo(m_PlayerInfo);
-				break;
+				{
+					SelectHUD->SetKnightInfo(m_PlayerInfo);
+					FActorSpawnParameters param;
+					param.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+					m_Right=GetWorld()->SpawnActor<AWeapon>(AWeapon::StaticClass(),
+						FVector(0.f,0.f,0.f),FRotator(0.f,0.f,0.f),param
+						);
+
+
+					m_Right->AttachToComponent(GetMesh(),FAttachmentTransformRules::KeepRelativeTransform,TEXT("RightWeaponShield"));
+
+					m_Right->SetMesh("SkeletalMesh'/Game/Player/RPG/Weapons/Sword01SM.Sword01SM_Sword01SM'");
+
+	
+					m_Left=GetWorld()->SpawnActor<AWeapon>(AWeapon::StaticClass(),
+						FVector(0.f,0.f,0.f),FRotator(0.f,0.f,0.f),param
+						);
+
+
+					m_Left->AttachToComponent(GetMesh(),FAttachmentTransformRules::KeepRelativeTransform,TEXT("LeftWeaponShield"));
+
+					m_Left->SetMesh("SkeletalMesh'/Game/Player/RPG/Weapons/Shield01SM.Shield01SM_Shield01SM'");
+					break;
+				}
 			case EPlayerJob::Archer:
-				SelectHUD->SetArcherInfo(m_PlayerInfo);
-				break;
+				{
+					SelectHUD->SetArcherInfo(m_PlayerInfo);
+					break;
+				}
 			case EPlayerJob::Mage:
-				break;
+				{
+					break;
+				}
 			}
 		}
 

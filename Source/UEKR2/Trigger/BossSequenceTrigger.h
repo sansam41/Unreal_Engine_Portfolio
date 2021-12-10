@@ -4,6 +4,7 @@
 
 #include "../GameInfo.h"
 #include "BoxTrigger.h"
+#include "UEKR2/Monster/Monster.h"
 #include "BossSequenceTrigger.generated.h"
 
 /**
@@ -23,6 +24,13 @@ protected:
 	ULevelSequencePlayer* m_SequencePlayer;
 
 	ALevelSequenceActor* m_SequenceActor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	AMonster* m_Monster;
+
+	
+	bool m_IsPlayed;
+	
 	
 protected:
 	// Called when the game starts or when spawned

@@ -25,7 +25,8 @@ protected:
 	FPlayerInfo m_PlayerInfo;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	USelectPlayerAnimInstance* m_AnimInstance;
-	
+	class AWeapon* m_Right;
+	class AWeapon* m_Left;
 public:
 	EPlayerJob GetPlayerJob() const
 	{

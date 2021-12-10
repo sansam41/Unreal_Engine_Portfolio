@@ -5,6 +5,8 @@
 #include "RPGPlayerAnim.h"
 #include "UEKR2/Effect/NormalEffect.h"
 #include "UEKR2/Player/Weapon.h"
+#include "UEKR2/RPG/RPGGameModeBase.h"
+#include "UEKR2/UEKR2GameInstance.h"
 
 ARPG_Knight::ARPG_Knight()
 {
@@ -38,6 +40,7 @@ ARPG_Knight::ARPG_Knight()
 
 	if (Attack3Asset.Succeeded())
 		m_AttackMontageArray.Add(Attack3Asset.Object);
+	
 	/*
 	static ConstructorHelpers::FObjectFinder<UAnimMontage>	Skill1Asset(TEXT("AnimMontage'/Game/Player/AMWraithSkill1.AMWraithSkill1'"));
 	if (Skill1Asset.Succeeded())
@@ -49,12 +52,29 @@ ARPG_Knight::ARPG_Knight()
 	if (Skill1Class.Succeeded())
 		m_Skill1Class = Skill1Class.Class;
 */	
+	static ConstructorHelpers::FObjectFinder<UAnimMontage>	RollFAsset(TEXT("AnimMontage'/Game/Player/RPG/AM_KnightRollF.AM_KnightRollF'"));
 
+	if (RollFAsset.Succeeded())
+		m_RollFrontAnimMontage = RollFAsset.Object;
 
+	static ConstructorHelpers::FObjectFinder<UAnimMontage>	RollBAsset(TEXT("AnimMontage'/Game/Player/RPG/AM_KnightRollB.AM_KnightRollB'"));
+
+	if (RollBAsset.Succeeded())
+	m_RollBackAnimMontage = RollBAsset.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage>	RollLAsset(TEXT("AnimMontage'/Game/Player/RPG/AM_KnightRollL.AM_KnightRollL'"));
+
+	if (RollLAsset.Succeeded())
+	m_RollLeftAnimMontage = RollLAsset.Object;
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage>	RollRAsset(TEXT("AnimMontage'/Game/Player/RPG/AM_KnightRollR.AM_KnightRollR'"));
+
+	if (RollRAsset.Succeeded())
+	m_RollRightAnimMontage = RollRAsset.Object;
 		
 	m_AttackIndex = 0;
 
-	m_PlayerInfo.Name = TEXT("Wraith");
+	m_PlayerInfo.Name = TEXT("Knight");
 	m_PlayerInfo.Job = EPlayerJob::Archer;
 	m_PlayerInfo.Attack = 120;
 	m_PlayerInfo.Armor = 20;
@@ -66,6 +86,7 @@ ARPG_Knight::ARPG_Knight()
 	m_PlayerInfo.AttackSpeed = 1.f;
 	m_PlayerInfo.AttackAngle = 22.5f;
 	m_PlayerInfo.MoveSpeed = 600.f;
+	
 }
 
 // Called when the game starts or when spawned
@@ -93,12 +114,36 @@ void ARPG_Knight::BeginPlay()
 	m_Shield->AttachToComponent(GetMesh(),FAttachmentTransformRules::KeepRelativeTransform,TEXT("LeftWeaponShield"));
 
 	m_Shield->SetMesh("SkeletalMesh'/Game/Player/RPG/Weapons/Shield01SM.Shield01SM_Shield01SM'");
+
+
+
+
+	UUEKR2GameInstance* GameInst = GetWorld()->GetGameInstance<UUEKR2GameInstance>();
+	if(GameInst)
+	{
+		const FUIItemTableInfo* ItemInfo = GameInst->FindUIItemInfo(TEXT("ì—´ì‡ "));
+		if(ItemInfo)
+		{
+			ARPGGameModeBase* GameMode = GetWorld()->GetAuthGameMode<ARPGGameModeBase>();
+			if(GameMode){
+				UMainHUD* MainHud = GameMode->GetMainHUD();
+
+				if(MainHud)
+				{
+					MainHud->GetMainInventoryList()->AddItem(ItemInfo);
+				}
+			}
+		}
+	}
 }
 
 // Called every frame
 void ARPG_Knight::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	if(m_Guard==true)
+		UseShield();
 }
 
 // Called to bind functionality to input
@@ -155,7 +200,7 @@ void ARPG_Knight::NormalAttack()
 
 	//LOG(TEXT("Attack : %.5f"), 200.f);
 	//LOG(TEXT("TestAttack"));
-	PrintViewport(1.f, FColor::Yellow, TEXT("Attack"));
+	
 
 	TArray<FHitResult>	CollisionArray;
 	if (Sweep)
@@ -181,6 +226,7 @@ void ARPG_Knight::NormalAttack()
 			}
 		}
 	}
+	/*
 #if ENABLE_DRAW_DEBUG
 
 	FColor	DrawColor = CollisionArray.Num() > 0 ? FColor::Red : FColor::Green;
@@ -192,7 +238,7 @@ void ARPG_Knight::NormalAttack()
 		DrawColor, false, 1.f);
 
 #endif
-
+*/
 	for (auto& result : CollisionArray)
 	{
 		FActorSpawnParameters	param;
@@ -208,7 +254,7 @@ void ARPG_Knight::NormalAttack()
 		//Effect->LoadSound(TEXT("SoundWave'/Game/Sound/Fire4.Fire4'"));
 		Effect->LoadSoundAsync(TEXT("HitSword"));
 
-		// µ¥¹ÌÁö¸¦ Àü´ÞÇÑ´Ù.
+		// ë°ë¯¸ì§€ë¥¼ ì „ë‹¬í•œë‹¤.
 		FDamageEvent DmgEvent;
 		result.GetActor()->TakeDamage(m_PlayerInfo.Attack, DmgEvent, GetController(),this);
 	}
@@ -244,3 +290,39 @@ void ARPG_Knight::UseSkill(int32 Index)
 	}
 }
 
+
+void ARPG_Knight::MouseRightKeyOn()
+{
+	m_Armor = m_PlayerInfo.Armor;
+	m_Guard = true;
+	UseShield();
+}
+
+void ARPG_Knight::UseShield()
+{
+	
+	if(m_Rolling||!(GetCharacterMovement()->IsMovingOnGround())||m_Attack)
+		return;
+	m_PlayerInfo.Armor =m_Armor+50;
+	
+	if(m_BeHited == false)
+		m_AnimInstance->ChangeAnimType(ERPG_PlayerAnimType::Guard);
+	else
+		m_AnimInstance->ChangeAnimType(ERPG_PlayerAnimType::GuardHited);
+	
+}
+void ARPG_Knight::MouseRightKeyOff()
+{
+	m_Guard = false;
+	m_PlayerInfo.Armor =m_Armor;
+	m_AnimInstance->ChangeAnimType(ERPG_PlayerAnimType::Ground);
+}
+
+
+float ARPG_Knight::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	const float Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	if(m_BeHited==false)
+		m_BeHited = true;
+	return Damage;
+}

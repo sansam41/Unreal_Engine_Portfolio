@@ -48,25 +48,56 @@ protected:
 	
 	USkeletalMesh* m_PlayerMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* m_PlayerFoot;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* m_PlayerHead;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* m_PlayerHand;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* m_Shoulder;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* m_Crown;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* m_Belt;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* m_Hair;
+
 
 	bool m_MoveKey;
+	bool m_FrontMove;
 	bool m_AttackEnable;
 	bool m_Death;
 	bool m_Attack;
-	
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess="true"))
 	bool m_Casting;
 	bool m_ShowUI;
+	bool m_EnableInput;
 
 
+	UAnimMontage* m_RollFrontAnimMontage;
+	UAnimMontage* m_RollBackAnimMontage;
+	UAnimMontage* m_RollLeftAnimMontage;
+	UAnimMontage* m_RollRightAnimMontage;
 
 
 	class URPGPlayerAnim* m_AnimInstance;
 
 	FTimerHandle m_MonsterDetectTimer;
 
+	class ANpcBase* m_InteractNpc;
 	
-
+public:
+	bool m_Guard; // knight guard
+	bool m_Rolling; // Rolling
+	bool FBRoll; // Rolling Direction
+	float RollDirection;
 public:
 	UPROPERTY(Config)
 	FString TestString;
@@ -97,6 +128,14 @@ public:
 	{
 		return m_Camera->GetComponentLocation();
 	}
+	void SetEnableInput(bool Input)
+	{
+		m_EnableInput = Input;
+	}
+
+	void AddGold(int32 Gold);
+	void AddExp(int32 Exp);
+	
 	
 	
 	
@@ -122,12 +161,16 @@ public:
 	void CameraRotationKey(float Scale);
 	void RotationZKey(float Scale);
 
+
 	void JumpKey();
 	void AttackKey();
 	void Skill1Key();
 	void Skill2Key();
 	void Skill3Key();
 	void changeShowUI();
+	void InteractKey();
+	void GameSaveKey();
+	
 
 
 protected:
@@ -135,12 +178,19 @@ protected:
 	virtual void Skill1();
 	virtual void Skill2();
 	virtual void Skill3();
+	virtual void RollFront();
+	virtual void RollLeft();
+	virtual void RollRight();
+	virtual void RollBack();
 
 public:
 	virtual void NormalAttack();
 	virtual void AttackEnd();
 	virtual void UseSkill(int32 Index);
 	virtual void UseSkillFire(int32 Index);
+	virtual void MouseRightKeyOn();
+	virtual void MouseRightKeyOff();
+
 	
 
 
@@ -159,4 +209,14 @@ public:
 
 	UFUNCTION()
 	void MonsterDetect();
+
+	void SetInteractNpc(ANpcBase* Npc)
+	{
+		m_InteractNpc=Npc;
+	}
+
+	void ShowMouseCursor(bool Show);
+
+	void InventoryInit();
+	
 };

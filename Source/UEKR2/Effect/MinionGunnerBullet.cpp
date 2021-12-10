@@ -2,7 +2,6 @@
 
 
 #include "MinionGunnerBullet.h"
-
 #include "NormalEffect.h"
 #include "../Monster/Monster.h"
 

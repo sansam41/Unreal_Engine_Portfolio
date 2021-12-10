@@ -10,6 +10,7 @@
 #include "ChatWidget.h"
 #include "QuestWidget.h"
 #include "MinimapWidget.h"
+#include "NpcDialogue.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Slider.h"
 #include "MainHUD.generated.h"
@@ -50,6 +51,12 @@ protected:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess = "true"))
 	UMinimapWidget*  m_Minimap;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess = "true"))
+	UUserWidget*  m_NpcTalk;
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,meta=(AllowPrivateAccess = "true"))
+	UNpcDialogue* m_NpcDialogue;
+
 	class UMaterialParameterCollection* m_LandScapeCollection;
 	class UMaterialParameterCollectionInstance* m_LandScapeCollectionInst;
 
@@ -86,7 +93,14 @@ public:
 	{
 		return m_Minimap;
 	}
+	UNpcDialogue* GetNpcDialogue()
+	{
+		return m_NpcDialogue;
+	}
+	
 	void ShowUI(bool Show);
+	void ShowNpcDialogue(bool Show);
+	void ShowNpcTalkKey(bool Show);
 	
 
 protected:

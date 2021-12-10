@@ -10,6 +10,7 @@
 #include "PatrolPointSpline.h"
 #include "UEKR2/Item/ItemBox.h"
 #include "../UEKR2GameModeBase.h"
+#include "UEKR2/RPG/RPGGameModeBase.h"
 
 // Sets default values
 AMonster::AMonster()
@@ -44,15 +45,15 @@ AMonster::AMonster()
 	m_HPBar->SetDrawSize(FVector2D(200.f, 60.f));
 	m_HPBar->SetRelativeLocation(FVector(0.f, 0.f, 230.f));
 	m_HPBar->SetBlendMode(EWidgetBlendMode::Transparent);
-
+	
 	GetMesh()->bReceivesDecals = false;
 
 	m_Dissolve = 1.5f;
 	m_DissolveTime = 5.f;
 	m_DissolveAccTime = 0.f;
 	m_DissolveEnable = false;
-	m_DissolveMin = -1.f;
-	m_DissolveMax = 1.5f;
+	m_DissolveMin = 0.f;
+	m_DissolveMax = 1.f;
 
 	m_DissolveRange = m_DissolveMax - m_DissolveMin;
 
@@ -64,6 +65,7 @@ AMonster::AMonster()
 	m_CurrentPatrolIndex = 0;
 
 	IsDead=false;
+	m_Boss = false;
 }
 
 // Called when the game starts or when spawned
@@ -101,6 +103,7 @@ void AMonster::BeginPlay()
 	m_AnimInstance = Cast<UMonsterAnimInstance>(GetMesh()->GetAnimInstance());
 
 	m_HPBarWidget = Cast<UHPBar>(m_HPBar->GetWidget());
+	m_HPBarWidget->SetVisibility(ESlateVisibility::Collapsed);
 
 	m_HPBarWidget->SetDelegate<AMonster>(this, &AMonster::NameWidgetCallback);
 
@@ -132,7 +135,7 @@ void AMonster::Tick(float DeltaTime)
 
 		m_Dissolve = m_DissolveMax - (m_DissolveAccTime / m_DissolveTime * m_DissolveRange);
 
-		GetMesh()->SetScalarParameterValueOnMaterials(TEXT("Dissolve"), m_Dissolve);
+		GetMesh()->SetScalarParameterValueOnMaterials(TEXT("Appearance"), m_Dissolve);
 
 		if (m_DissolveAccTime >= m_DissolveTime)
 		{
@@ -140,7 +143,8 @@ void AMonster::Tick(float DeltaTime)
 
 			m_Dissolve = m_DissolveMin;
 
-			m_SpawnPoint->Death();
+			if(m_SpawnPoint)
+				m_SpawnPoint->Death();
 			Destroy();
 		}
 	}
@@ -165,11 +169,21 @@ void AMonster::ChangeAnimType(EMonsterAnimType Type)
 {
 	m_AnimInstance->ChangeAnimType(Type);
 }
+EMonsterAttackType AMonster::GetAttackType()	const
+{
+	return m_AnimInstance->GetAttackType();
+}
+void AMonster::ChangeAttackType(EMonsterAttackType Type)
+{
+	m_AnimInstance->ChangeAttackType(Type);
+}
 
 float AMonster::TakeDamage(float DamageAmount, 
 	struct FDamageEvent const& DamageEvent, 
 	class AController* EventInstigator, AActor* DamageCauser)
 {
+	if(m_HPBarWidget->GetVisibility()!=ESlateVisibility::Visible)
+		m_HPBarWidget->SetVisibility(ESlateVisibility::Visible);
 	float Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 
 	if (Damage == 0.f)
@@ -193,8 +207,7 @@ float AMonster::TakeDamage(float DamageAmount,
 			MonsterController->BrainComponent->StopLogic(TEXT("Dead"));
 		}
 		// 몬스터가 죽었을 경우 퀘스트 체크
-		AUEKR2GameModeBase* GameMode = Cast<AUEKR2GameModeBase>(GetWorld()->GetAuthGameMode());
-
+		ARPGGameModeBase* GameMode = Cast<ARPGGameModeBase>(GetWorld()->GetAuthGameMode());
 		if(GameMode)
 		{
 			UQuestWidget* QuestWidget = GameMode->GetMainHUD()->GetQuestWidget();
@@ -202,6 +215,7 @@ float AMonster::TakeDamage(float DamageAmount,
 			if(QuestWidget)
 			{
 				QuestWidget->QuestCheck(EQuestType::Hunt,m_MonsterInfo.Name);
+				PrintViewport(1.f,FColor::Red,m_MonsterInfo.Name);
 			}
 		}
 
@@ -223,7 +237,6 @@ float AMonster::TakeDamage(float DamageAmount,
 				const FUIItemTableInfo* ItemInfo = GameInst->FindUIItemInfo(m_DropItemNameArray[Index]);
 				if(ItemInfo)
 				{
-						
 					FActorSpawnParameters	param;
 					param.SpawnCollisionHandlingOverride =
 						ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
@@ -236,10 +249,12 @@ float AMonster::TakeDamage(float DamageAmount,
 						FMath::RandPointInBox(SpawnBox),
 						GetMesh()->GetComponentRotation(),param);
 
-					ItemBox->SetMesh(ItemInfo->Mesh);
+					if(ItemBox)
+					{
+						ItemBox->SetMesh(ItemInfo->Mesh);
 					
-					PrintViewport(1.f,FColor::Red,m_DropItemNameArray[Index]);
-					ItemBox->SetItemName(m_DropItemNameArray[Index]);
+						ItemBox->SetItemName(m_DropItemNameArray[Index]);
+					}
 				}
 			}
 		}

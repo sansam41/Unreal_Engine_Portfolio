@@ -42,7 +42,7 @@ bool UBTDecorator_CheckDistance::CalculateRawConditionValue(UBehaviorTreeCompone
 	MonsterLoc.Z = TargetLoc.Z;
 	float Distance = FVector::Distance(MonsterLoc, TargetLoc);
 	float CheckDist = 0.f;
-
+	
 	switch (m_CheckType)
 	{
 	case ECheckDistanceType::Trace:
@@ -50,7 +50,6 @@ bool UBTDecorator_CheckDistance::CalculateRawConditionValue(UBehaviorTreeCompone
 		break;
 	case ECheckDistanceType::Attack:
 		CheckDist = MonsterInfo.AttackDistance;
-
 		break;
 	}
 

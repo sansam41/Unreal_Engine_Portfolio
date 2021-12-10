@@ -3,6 +3,8 @@
 
 #include "BossSequenceTrigger.h"
 
+#include "UEKR2/RPG/Player/RPG_PlayerCharacter.h"
+
 
 ABossSequenceTrigger::ABossSequenceTrigger()
 {
@@ -11,6 +13,7 @@ ABossSequenceTrigger::ABossSequenceTrigger()
 
 	m_SequenceAsset = nullptr;
 	m_SequencePlayer = nullptr;
+	m_IsPlayed = false;
 	
 }
 
@@ -35,7 +38,7 @@ void ABossSequenceTrigger::Tick(float DeltaTime)
 
 void ABossSequenceTrigger::TriggerBegin()
 {
-	if(m_SequenceAsset)
+	if(m_SequenceAsset&&!m_IsPlayed)
 	{
 		if(!m_SequencePlayer)
 		{
@@ -47,10 +50,22 @@ void ABossSequenceTrigger::TriggerBegin()
 
 		PrintViewport(1.f, FColor::Red, TEXT("Hit"));
 		m_SequencePlayer->Play();
+		ARPG_PlayerCharacter* Player = Cast<ARPG_PlayerCharacter>(m_Other);
+		if(Player)
+			Player->SetEnableInput(false);
+		
 	}
 }
 
 void ABossSequenceTrigger::TriggerEnd()
 {
-	
+	if(!m_IsPlayed)
+	{
+		m_IsPlayed = true;
+		ARPG_PlayerCharacter* Player = Cast<ARPG_PlayerCharacter>(m_Other);
+		if(Player)
+			Player->SetEnableInput(true);
+		if(m_Monster)
+			m_Monster->m_BattleStart=true;
+	}
 }

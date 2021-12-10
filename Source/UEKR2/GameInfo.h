@@ -43,7 +43,8 @@ DECLARE_LOG_CATEGORY_EXTERN(UEKR2, Log, All);
 #define	LOGSTRING(Str)		UE_LOG(UEKR2, Warning, TEXT("%s : %s"), *LOG_CALLINFO, *Str)
 
 void PrintViewport(float Time, const FColor& Color, const FString& Text);
-//PrintViewport(1.f,FColor::Red,TEXT("in"));
+// PrintViewport(1.f,FColor::Red,TEXT("in"));
+// FString::SanitizeFloat(floatº¯¼ö)
 UENUM(BlueprintType)
 enum class EPlayerJob : uint8 {
 	Knight,
@@ -57,6 +58,8 @@ enum class ECheckDistanceType :uint8
 {
 	Trace,
 	Attack,
+	Skill1,
+	Skill2
 
 };
 
@@ -138,7 +141,8 @@ enum class EItemType : uint8
 {
 	Weapon,
 	Armor,
-	Potion
+	Potion,
+	Quest
 };
 
 
@@ -207,6 +211,27 @@ public:
 };
 
 
+
+UENUM(BlueprintType)
+enum class EQuestRewardType : uint8
+{
+	Gold,
+	Item,
+	Exp
+};
+
+USTRUCT(BlueprintType)
+struct FQuestRewardInfo
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	EQuestRewardType Type;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	FString Reward;
+};
+
+
 USTRUCT(BlueprintType)
 struct FQuestTableInfo : public FTableRowBase
 {
@@ -219,7 +244,10 @@ public:
 	FString QuestDesc;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	TArray<FQuestInfo> InfoArray;					
+	TArray<FQuestInfo> InfoArray;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	TArray<FQuestRewardInfo> RewardInfo;					
 };
 
 struct FQuestDataInfo
@@ -236,7 +264,9 @@ struct FQuestData
 	FString Name;
 	FString QuestDesc;
 	TArray<FQuestDataInfo>	CompleteArray;
+	TArray<FQuestRewardInfo>	RewardArray;
 	bool Complete;
+	bool accept;
 	
 };
 

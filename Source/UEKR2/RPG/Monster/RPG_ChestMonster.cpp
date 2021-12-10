@@ -15,7 +15,11 @@ ARPG_ChestMonster::ARPG_ChestMonster()
 	if (MeshAsset.Succeeded())
 		GetMesh()->SetSkeletalMesh(MeshAsset.Object);
 
-	static ConstructorHelpers::FClassFinder<UAnimInstance> AnimAsset(TEXT("AnimBlueprint'/Game/Monster/BPMinionWarriorAnim.BPMinionWarriorAnim_C'"));
+	//static ConstructorHelpers::FClassFinder<UAnimInstance> AnimAsset(TEXT("AnimBlueprint'/Game/Monster/BPMinionWarriorAnim.BPMinionWarriorAnim_C'"));
+	//if (AnimAsset.Succeeded())
+	//	GetMesh()->SetAnimInstanceClass(AnimAsset.Class);
+
+	static ConstructorHelpers::FClassFinder<UAnimInstance> AnimAsset(TEXT("AnimBlueprint'/Game/Monster/RPG/BP_ChestMonsterAnim.BP_ChestMonsterAnim_C'"));
 	if (AnimAsset.Succeeded())
 		GetMesh()->SetAnimInstanceClass(AnimAsset.Class);
 
@@ -55,7 +59,7 @@ void ARPG_ChestMonster::NormalAttack()
 		FCollisionShape::MakeSphere(30.f),
 		params);
 
-	
+/*	
 #if ENABLE_DRAW_DEBUG
 
 	FColor	DrawColor = Sweep ? FColor::Red : FColor::Green;
@@ -65,7 +69,7 @@ void ARPG_ChestMonster::NormalAttack()
 		30.f,FRotationMatrix::MakeFromZ(Forward).ToQuat(),DrawColor,false,0.5f);
 
 #endif
-
+*/
 	if(Sweep)
 	{
 		FActorSpawnParameters	param;

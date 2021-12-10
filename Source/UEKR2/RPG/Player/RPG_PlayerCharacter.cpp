@@ -17,6 +17,8 @@
 #include "UEKR2//Network/PacketStream.h"
 #include "UEKR2/Network/NetworkManager.h"
 #include "UEKR2/Network/NetworkSession.h"
+#include "UEKR2/Player/PlayerCharacter.h"
+#include "UEKR2/RPG/Npc/NpcBase.h"
 #include "UEKR2/RPG/RPGGameModeBase.h"
 
 
@@ -47,18 +49,23 @@ ARPG_PlayerCharacter::ARPG_PlayerCharacter()
 	m_Camera->SetupAttachment(m_Arm);
 
 
-	GetCharacterMovement()->JumpZVelocity = 600.f;
 
 	m_MoveKey = false;
 	m_AttackEnable = true;
 	m_Death=false;
 	m_Casting=false;
 	m_ShowUI=false;
-	
+	m_Rolling = false;
+	m_Guard = false;
+	FBRoll = false;
+	m_FrontMove=false;
+	m_EnableInput = true;
+	RollDirection = 0;
 	
 
 	
 	m_FallRecoveryMontage = nullptr;
+	m_InteractNpc = nullptr;
 
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player"));
 
@@ -89,6 +96,7 @@ ARPG_PlayerCharacter::ARPG_PlayerCharacter()
 	
 	m_PlayerMesh = nullptr;
 	GetCharacterMovement()->JumpZVelocity = 500.f;
+
 	
 }
 
@@ -96,6 +104,12 @@ ARPG_PlayerCharacter::ARPG_PlayerCharacter()
 void ARPG_PlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	
+	m_Rolling = false;
+	m_Guard = false;
+	FBRoll = false;
+
 	
 	// Animation 블루프린트를 얻을 수 있다.
 	m_AnimInstance = Cast<URPGPlayerAnim>(GetMesh()->GetAnimInstance());
@@ -123,6 +137,37 @@ void ARPG_PlayerCharacter::BeginPlay()
 	
 	LOGSTRING(TestString);
 
+	FString FullPath = FString::Printf(TEXT("%s%s"),
+		*FPaths::ProjectSavedDir(),TEXT("SavePlayer.txt"));
+
+	TSharedPtr<FArchive> FileReader = MakeShareable(IFileManager::Get().CreateFileReader(*FullPath));
+
+	*FileReader.Get()  << m_PlayerInfo.Name;
+	*FileReader.Get()  << m_PlayerInfo.Armor;
+	*FileReader.Get()  << m_PlayerInfo.Attack;
+	*FileReader.Get()  << m_PlayerInfo.Exp;
+	*FileReader.Get()  << m_PlayerInfo.Gold;
+	*FileReader.Get()  << m_PlayerInfo.Job;
+	*FileReader.Get()  << m_PlayerInfo.Level;
+	*FileReader.Get()  << m_PlayerInfo.AttackAngle;
+	*FileReader.Get()  << m_PlayerInfo.AttackDistance;
+	*FileReader.Get()  << m_PlayerInfo.AttackSpeed;
+	*FileReader.Get()  << m_PlayerInfo.HP;
+	*FileReader.Get()  << m_PlayerInfo.HPMax;
+	*FileReader.Get()  << m_PlayerInfo.MP;
+	*FileReader.Get()  << m_PlayerInfo.MPMax;
+	*FileReader.Get()  << m_PlayerInfo.MoveSpeed;
+	FVector Pos, Scale;
+	FRotator Rot;
+
+	*FileReader.Get()<<Pos;
+	*FileReader.Get()<<Scale;
+	*FileReader.Get()<<Rot;
+
+	SetActorLocation(Pos);
+	Controller->SetControlRotation(Rot);
+	SetActorScale3D(Scale);
+
 	// 서버에 현재 캐릭터의  위치를 넘겨준다.
 	NetworkSession* Session = NetworkManager::GetInst()->GetSession();
 
@@ -132,8 +177,8 @@ void ARPG_PlayerCharacter::BeginPlay()
 	stream.SetBuffer(Packet);
 
 	FVector Loc=GetActorLocation();
-	FRotator Rot=GetActorRotation();
-	FVector Scale=GetActorScale();
+	Rot=GetActorRotation();
+	Scale=GetActorScale();
 
 	int32 Job = (int32)m_PlayerInfo.Job;
 	
@@ -154,10 +199,29 @@ void ARPG_PlayerCharacter::BeginPlay()
 		{
 			Minimap->RotationArrow(Rot.Yaw);
 		}
+
+		//GameMode ->GetMainHUD()->GetMainInventoryList()->SetInventoryInitDelegate(this,&ARPG_PlayerCharacter::InventoryInit);
+
+		GameMode->GetMainHUD()->GetMainInventoryList()->SetGold(m_PlayerInfo.Gold);
 	}
 
 	GetWorldTimerManager().SetTimer(m_MonsterDetectTimer,
 		this, &ARPG_PlayerCharacter::MonsterDetect, 0.03f, true);
+
+	if(IsValid(GameMode))
+	{
+		UMainHUD* MainHud = GameMode->GetMainHUD();
+
+		if(IsValid(MainHud))
+		{
+			UCharacterHUD* CharacterHUD = MainHud->GetCharacterHUD();
+
+			if(IsValid(CharacterHUD))
+			{
+				CharacterHUD->SetHPPercent(m_PlayerInfo.HP/(float)m_PlayerInfo.HPMax);
+			}
+		}
+	}
 	
 }
 
@@ -165,7 +229,6 @@ void ARPG_PlayerCharacter::BeginPlay()
 void ARPG_PlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 // 입력처리 때 호출
@@ -191,28 +254,53 @@ void ARPG_PlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	PlayerInputComponent->BindAction(TEXT("Skill3"), EInputEvent::IE_Pressed,this,&ARPG_PlayerCharacter::Skill3Key);
 	
 	PlayerInputComponent->BindAction(TEXT("ShowUI"), EInputEvent::IE_Pressed,this,&ARPG_PlayerCharacter::changeShowUI);
+	
+	PlayerInputComponent->BindAction(TEXT("Interact"), EInputEvent::IE_Pressed,this,&ARPG_PlayerCharacter::InteractKey);
+	
+	PlayerInputComponent->BindAction(TEXT("RollFront"), EInputEvent::IE_DoubleClick,this,&ARPG_PlayerCharacter::RollFront);
+	PlayerInputComponent->BindAction(TEXT("RollBack"), EInputEvent::IE_DoubleClick,this,&ARPG_PlayerCharacter::RollBack);
+	PlayerInputComponent->BindAction(TEXT("RollLeft"), EInputEvent::IE_DoubleClick,this,&ARPG_PlayerCharacter::RollLeft);
+	PlayerInputComponent->BindAction(TEXT("RollRight"), EInputEvent::IE_DoubleClick,this,&ARPG_PlayerCharacter::RollRight);
+	
+	PlayerInputComponent->BindAction(TEXT("MouseRight"), EInputEvent::IE_Pressed,this,&ARPG_PlayerCharacter::MouseRightKeyOn);
+	PlayerInputComponent->BindAction(TEXT("MouseRight"), EInputEvent::IE_Released,this,&ARPG_PlayerCharacter::MouseRightKeyOff);
+	PlayerInputComponent->BindAction(TEXT("Save"), EInputEvent::IE_Pressed,this,&ARPG_PlayerCharacter::GameSaveKey);
 
+
+
+
+	
 }
 
 void ARPG_PlayerCharacter::MoveFrontKey(float Scale)
 {
-	if(!m_Casting&&!m_Attack)
+	if(!m_EnableInput)
+		return;
+	if(m_Rolling&&FBRoll)
 	{
-		AddMovementInput(GetActorForwardVector(), Scale);
+		AddMovementInput(GetActorForwardVector(),RollDirection);
+		return;
+	}
+	if(!m_Casting&&!m_Attack&&!m_Guard&&!m_Rolling)
+	{
+		AddMovementInput(GetActorForwardVector(),Scale);
 		
 		if (Scale == 0.f) {
 			m_MoveKey = false;
+			m_FrontMove=false;
 			m_AnimInstance->SetDirection(0.f);
 		}
 		else if (Scale == 1.f)
 		{
 			m_MoveKey = true;
+			m_FrontMove=true;
 			m_AnimInstance->SetDirection(0.f);
 			
 		}
 		else
 		{
 			m_MoveKey = true;
+			m_FrontMove=true;
 			m_AnimInstance->SetDirection(180.f);
 		}
 	}
@@ -220,7 +308,15 @@ void ARPG_PlayerCharacter::MoveFrontKey(float Scale)
 
 void ARPG_PlayerCharacter::MoveSideKey(float Scale)
 {
-	if(!m_Casting&&!m_Attack)
+	
+	if(!m_EnableInput)
+		return;
+	if(m_Rolling&&FBRoll== false)
+	{
+		AddMovementInput(GetActorRightVector(),RollDirection);
+		return;
+	}
+	if(!m_Casting&&!m_Attack&&!m_Guard&&!m_Rolling)
 	{
 		AddMovementInput(GetActorRightVector(), Scale);
 
@@ -229,20 +325,44 @@ void ARPG_PlayerCharacter::MoveSideKey(float Scale)
 		if (Scale == 1.f)
 		{
 			m_MoveKey = true;
-			if (Direction == 0.f) {
-				m_AnimInstance->SetDirection(45.f);
+			if(!m_FrontMove)
+			{
+				if (Direction == 0.f) {
+					m_AnimInstance->SetDirection(90.f);
+				}
+				else
+					m_AnimInstance->SetDirection(90.f);
 			}
-			else
-				m_AnimInstance->SetDirection(135.f);
+			else{
+				if (Direction == 0.f)
+				{
+					m_AnimInstance->SetDirection(45.f);
+				}
+				else
+				{
+					m_AnimInstance->SetDirection(135.f);
+				}
+			}
 		}
 		else if (Scale == -1.f)
 		{
 			m_MoveKey = true;
-			if (Direction == 0.f) {
-				m_AnimInstance->SetDirection(-45.f);
+			if(!m_FrontMove)
+			{
+				if (Direction == 0.f) {
+					m_AnimInstance->SetDirection(-90.f);
+				}
+				else
+					m_AnimInstance->SetDirection(-90.f);
 			}
 			else
-				m_AnimInstance->SetDirection(-135.f);
+			{
+				if (Direction == 0.f) {
+					m_AnimInstance->SetDirection(-45.f);
+				}
+				else
+					m_AnimInstance->SetDirection(-135.f);
+			}
 		}
 	}
 }
@@ -253,17 +373,20 @@ void ARPG_PlayerCharacter::MoveSideKey(float Scale)
 
 void ARPG_PlayerCharacter::CameraZoomKey(float Scale)
 {
+	
+	if(!m_EnableInput)
+		return;
 	m_Arm->TargetArmLength -= Scale * 30.f;
-	m_Arm->TargetOffset.Z-=Scale*30.f;
-	if (m_Arm->TargetArmLength < 200.f)
+	m_Arm->TargetOffset.Z-=Scale*60.f;
+	if (m_Arm->TargetArmLength < 400.f)
 	{
-		m_Arm->TargetArmLength = 200.f;
+		m_Arm->TargetArmLength = 400.f;
 		m_Arm->TargetOffset.Z = 200.f;
 	}
-	if (m_Arm->TargetArmLength > 500.f)
+	if (m_Arm->TargetArmLength > 600.f)
 	{
-		m_Arm->TargetArmLength = 500.f;
-		m_Arm->TargetOffset.Z = 500.f;
+		m_Arm->TargetArmLength = 600.f;
+		m_Arm->TargetOffset.Z = 600.f;
 	}
 	FRotator Rot = m_Arm->GetRelativeRotation();
 
@@ -288,6 +411,9 @@ void ARPG_PlayerCharacter::CameraLookUpKey(float Scale)
 
 void ARPG_PlayerCharacter::CameraRotationKey(float Scale)
 {
+	
+	if(!m_EnableInput)
+		return;
 	//FRotator Rot = m_Arm->GetRelativeRotation();
 	//
 	//Rot.Yaw += Scale * 100.f*GetWorld()->GetDeltaSeconds();
@@ -313,6 +439,9 @@ void ARPG_PlayerCharacter::JumpKey()
 {
 
 
+	if(!m_EnableInput)
+		return;
+	
 	if(!m_Casting)
 	{
 		if(m_Death)
@@ -327,10 +456,17 @@ void ARPG_PlayerCharacter::JumpKey()
 }
 
 void ARPG_PlayerCharacter::RotationZKey(float Scale) {
+	
+	if(!m_EnableInput)
+		return;
 	AddControllerYawInput(Scale*0.5f);
 }
 void ARPG_PlayerCharacter::AttackKey() {
-	if (m_AttackEnable)
+	
+	if(!m_EnableInput)
+		return;
+	
+	if (m_AttackEnable&&!m_Rolling&&!m_Guard)
 	{
 		PrintViewport(1.f, FColor::Yellow, TEXT("Attack"));
 		m_Attack=true;
@@ -342,6 +478,9 @@ void ARPG_PlayerCharacter::AttackKey() {
 }
 void ARPG_PlayerCharacter::Skill1Key()
 {
+	
+	if(!m_EnableInput)
+		return;
 	if(m_Casting==true)
 		return;
 	
@@ -351,6 +490,9 @@ void ARPG_PlayerCharacter::Skill1Key()
 
 void ARPG_PlayerCharacter::Skill2Key()
 {
+	
+	if(!m_EnableInput)
+		return;
 	if(m_Casting==true)
 		return;
 	m_AttackEnable = false;
@@ -360,6 +502,9 @@ void ARPG_PlayerCharacter::Skill2Key()
 
 void ARPG_PlayerCharacter::Skill3Key()
 {
+	
+	if(!m_EnableInput)
+		return;
 	if(m_Casting==true)
 		return;
 	m_AttackEnable = false;
@@ -368,25 +513,90 @@ void ARPG_PlayerCharacter::Skill3Key()
 }
 
 
+void ARPG_PlayerCharacter::GameSaveKey()
+{
+	
+	if(!m_EnableInput)
+		return;
+	/*
+	// 언리얼에서 지원하는 세이브 방식
+	UUEKR2SaveGame* SaveGame = NewObject<UUEKR2SaveGame>();
+
+	SaveGame->SetPlayerInfo(m_PlayerInfo);
+	SaveGame->SetPos(GetActorLocation());
+	SaveGame->SetRot(GetActorRotation());
+	SaveGame->SetScale(GetActorScale());
+
+	UGameplayStatics::SaveGameToSlot(SaveGame, "Save1",0);
+	*/
+	FString FullPath = FString::Printf(TEXT("%s%s"),
+		*FPaths::ProjectSavedDir(),TEXT("SavePlayer.txt"));
+
+	FArchive* Writer =  IFileManager::Get().CreateFileWriter(*FullPath);
+
+	if(Writer)
+	{
+		*Writer << m_PlayerInfo.Name;
+		*Writer << m_PlayerInfo.Armor;
+		*Writer << m_PlayerInfo.Attack;
+		*Writer << m_PlayerInfo.Exp;
+		*Writer << m_PlayerInfo.Gold;
+		*Writer << m_PlayerInfo.Job;
+		*Writer << m_PlayerInfo.Level;
+		*Writer << m_PlayerInfo.AttackAngle;
+		*Writer << m_PlayerInfo.AttackDistance;
+		*Writer << m_PlayerInfo.AttackSpeed;
+		*Writer << m_PlayerInfo.HP;
+		*Writer << m_PlayerInfo.HPMax;
+		*Writer << m_PlayerInfo.MP;
+		*Writer << m_PlayerInfo.MPMax;
+		*Writer << m_PlayerInfo.MoveSpeed;
+
+		FVector Pos, Scale;
+		Pos = GetActorLocation();
+		Scale = GetActorScale();
+		FRotator Rot = GetActorRotation();
+		
+		*Writer <<Pos;
+		*Writer <<Scale;
+		*Writer <<Rot;
+
+		Writer->Close();
+
+		delete Writer;
+	}
+}
+
+
 void ARPG_PlayerCharacter::changeShowUI()
 {
+	
+	if(!m_EnableInput)
+		return;
 	
 	AMainPlayerController* PlayerController=Cast<AMainPlayerController>(GetWorld()->GetFirstPlayerController());
 	if(m_ShowUI)
 	{
 		m_ShowUI=false;
-			
-		PlayerController->bShowMouseCursor = false;
+		ShowMouseCursor(m_ShowUI);
 		PlayerController->m_ShowUI=false;
 	}
 	else
 	{	m_ShowUI=true;
 			
-		PlayerController->bShowMouseCursor = true;
+		ShowMouseCursor(m_ShowUI);
 		PlayerController->m_ShowUI=true;
 	}
 }
 
+
+void ARPG_PlayerCharacter::ShowMouseCursor(bool Show)
+{
+	
+	AMainPlayerController* PlayerController=Cast<AMainPlayerController>(GetWorld()->GetFirstPlayerController());
+	
+	PlayerController->bShowMouseCursor = Show;
+}
 
 
 
@@ -477,6 +687,7 @@ float ARPG_PlayerCharacter::TakeDamage(float DamageAmount, FDamageEvent const& D
 void ARPG_PlayerCharacter::NameWidgetCallback()
 {
 	m_HPBarWidget->SetName(m_PlayerInfo.Name);
+	m_HPBarWidget->SetHPPercent(m_PlayerInfo.HP / (float)m_PlayerInfo.HPMax);
 }
 
 void ARPG_PlayerCharacter::CharacterNameWidgetCallback()
@@ -573,5 +784,126 @@ void ARPG_PlayerCharacter::MonsterDetect()
 				Minimap->AddMonster(RelativePos);
 			}
 		}
+	}
+}
+
+
+void ARPG_PlayerCharacter::MouseRightKeyOn()
+{
+	
+	if(!m_EnableInput)
+		return;
+}
+
+void ARPG_PlayerCharacter::MouseRightKeyOff()
+{
+	
+}
+
+void ARPG_PlayerCharacter::RollFront()
+{
+	
+	if(!m_EnableInput)
+		return;
+	
+	if(!m_AnimInstance->Montage_IsPlaying(m_RollFrontAnimMontage)&&!m_Rolling&&!m_Guard&&GetCharacterMovement()->IsMovingOnGround())
+	{
+		GetCharacterMovement()->MaxWalkSpeed *=1.5; 
+		m_AnimInstance->Montage_SetPosition(m_RollFrontAnimMontage, 0.f);
+		m_AnimInstance->Montage_Play(m_RollFrontAnimMontage);
+		m_Rolling=true;
+	}
+	FBRoll = true;
+	RollDirection = 1.f;
+	
+}
+
+void ARPG_PlayerCharacter::RollBack()
+{
+	
+	if(!m_EnableInput)
+		return;
+	
+	if(!m_AnimInstance->Montage_IsPlaying(m_RollBackAnimMontage)&&!m_Rolling&&!m_Guard&&GetCharacterMovement()->IsMovingOnGround())
+	{
+		GetCharacterMovement()->MaxWalkSpeed *=1.5; 
+		m_AnimInstance->Montage_SetPosition(m_RollBackAnimMontage, 0.f);
+		m_AnimInstance->Montage_Play(m_RollBackAnimMontage);
+		m_Rolling=true;
+	}
+	FBRoll = true;
+	RollDirection = -1.f;
+}
+
+void ARPG_PlayerCharacter::RollLeft()
+{
+	
+	if(!m_EnableInput)
+		return;
+	
+	if(!m_AnimInstance->Montage_IsPlaying(m_RollLeftAnimMontage)&&!m_Rolling&&!m_Guard&&GetCharacterMovement()->IsMovingOnGround())
+	{
+		GetCharacterMovement()->MaxWalkSpeed *=1.5; 
+		m_AnimInstance->Montage_SetPosition(m_RollLeftAnimMontage, 0.f);
+		m_AnimInstance->Montage_Play(m_RollLeftAnimMontage);
+		m_Rolling=true;
+	}
+	FBRoll = false;
+	RollDirection = -1.f;
+}
+
+void ARPG_PlayerCharacter::RollRight()
+{
+	
+	if(!m_EnableInput)
+		return;
+	
+	if(!m_AnimInstance->Montage_IsPlaying(m_RollRightAnimMontage)&&!m_Rolling&&!m_Guard&&GetCharacterMovement()->IsMovingOnGround())
+	{
+		GetCharacterMovement()->MaxWalkSpeed *=1.5; 
+		m_AnimInstance->Montage_SetPosition(m_RollRightAnimMontage, 0.f);
+		m_AnimInstance->Montage_Play(m_RollRightAnimMontage);
+		m_Rolling=true;
+	}
+	FBRoll = false;
+	RollDirection = 1.f;
+}
+
+void ARPG_PlayerCharacter::InteractKey()
+{
+	
+	if(!m_EnableInput)
+		return;
+	
+	if(m_InteractNpc)
+	{
+		PrintViewport(1.f,FColor::Red,m_InteractNpc->m_NpcInfo.Name);
+		m_InteractNpc->SetDialogue();
+		ShowMouseCursor(true);
+	}
+}
+
+
+void ARPG_PlayerCharacter::AddGold(int32 Gold)
+{
+	m_PlayerInfo.Gold += Gold;
+	ARPGGameModeBase* GameMode = Cast<ARPGGameModeBase>(GetWorld()->GetAuthGameMode());
+	if(GameMode)
+	{
+		GameMode->GetMainHUD()->GetMainInventoryList()->SetGold(m_PlayerInfo.Gold);
+	}
+}
+void ARPG_PlayerCharacter::AddExp(int32 Exp)
+{
+	m_PlayerInfo.Exp+= Exp;
+}
+
+
+void ARPG_PlayerCharacter::InventoryInit()
+{
+	ARPGGameModeBase* GameMode = Cast<ARPGGameModeBase>(GetWorld()->GetAuthGameMode());
+	if(GameMode)
+	{
+		GameMode->GetMainHUD()->GetMainInventoryList()->SetGold(m_PlayerInfo.Gold);
 	}
 }

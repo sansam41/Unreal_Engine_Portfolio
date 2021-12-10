@@ -13,6 +13,8 @@ enum class ERPG_PlayerAnimType : uint8
 	Jump,
 	Fall,
 	JumpEnd,
+	Guard,
+	GuardHited,
 	Death
 };
 
@@ -39,6 +41,7 @@ class UEKR2_API URPGPlayerAnim : public UAnimInstance
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	bool	m_OnGround;
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	ERPG_PlayerAnimType	m_AnimType;
@@ -64,6 +67,7 @@ class UEKR2_API URPGPlayerAnim : public UAnimInstance
 	{
 		return m_Attack;
 	}
+	
 
 	void ChangeAnimType(ERPG_PlayerAnimType Type)
 	{
@@ -117,5 +121,9 @@ class UEKR2_API URPGPlayerAnim : public UAnimInstance
 	void AnimNotify_LeftStep();
 	UFUNCTION()
 	void AnimNotify_IdleStart();
+	UFUNCTION()
+	void AnimNotify_HitedEnd();
+	UFUNCTION()
+	void AnimNotify_RollEnd();
 
 };

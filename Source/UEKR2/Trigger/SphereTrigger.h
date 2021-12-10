@@ -13,16 +13,17 @@ UCLASS()
 class UEKR2_API ASphereTrigger : public ATrigger
 {
 	GENERATED_BODY()
+protected:
 	ASphereTrigger();
 	
-	protected:
+
 
 	
-	protected:
+protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	public:	
+public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

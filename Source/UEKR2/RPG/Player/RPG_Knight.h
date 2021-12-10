@@ -21,6 +21,7 @@ class UEKR2_API ARPG_Knight : public ARPG_PlayerCharacter
 	protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	TArray<UAnimMontage*> m_AttackMontageArray;
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	TArray<UAnimMontage*> m_SkillMontageArray;
@@ -30,12 +31,16 @@ class UEKR2_API ARPG_Knight : public ARPG_PlayerCharacter
 
 	
 	int32 m_AttackIndex;
+	float m_Armor;
 
 	
 	class AWeapon* m_Weapon;
-	class AWeapon* m_Shield;
+	class AWeapon*m_Shield;
 
 	//class AWeapon* m_Weapon;
+
+public:
+	bool m_BeHited;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -51,10 +56,19 @@ public:
 protected:
 	virtual void Attack();
 	virtual void Skill1();
+	virtual void MouseRightKeyOn();
+	virtual void MouseRightKeyOff();
+
 
 public:
 	virtual void NormalAttack();
 	virtual void AttackEnd();
 	virtual void UseSkill(int32 Index);
+
+public:
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
+public:
+	void UseShield();
 
 };

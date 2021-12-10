@@ -120,13 +120,37 @@ void ASelectPlayerController::Picking()
 			if (m_SelectCharacter != SelectPlayer)
 			{
 				if (m_SelectCharacter)
+				{
 					m_SelectCharacter->GetMesh()->SetCustomDepthStencilValue(255);
-
+					USkeletalMeshComponent* Right = Cast<USkeletalMeshComponent>(m_SelectCharacter->GetMesh()->GetChildComponent(0));
+					USkeletalMeshComponent* Left = Cast<USkeletalMeshComponent>(m_SelectCharacter->GetMesh()->GetChildComponent(1));
+					
+					if(Right)
+					{
+						Right->SetRenderCustomDepth(true);
+						Right->SetCustomDepthStencilValue(255);
+						Left->SetRenderCustomDepth(true);
+						Left->SetCustomDepthStencilValue(255);
+					}
+				}
 				m_SelectCharacter = SelectPlayer;
 
 				if(SelectPlayer->GetPlayerJob()==EPlayerJob::Knight)
+				{
 					m_SelectCharacter->GetMesh()->SetCustomDepthStencilValue(1);
-				
+					USkeletalMeshComponent* Right = Cast<USkeletalMeshComponent>(m_SelectCharacter->GetMesh()->GetChildComponent(0));
+					USkeletalMeshComponent* Left = Cast<USkeletalMeshComponent>(m_SelectCharacter->GetMesh()->GetChildComponent(1));
+					
+					if(Right)
+					{
+						Right->SetRenderCustomDepth(true);
+						Right->SetCustomDepthStencilValue(1);
+						Left->SetRenderCustomDepth(true);
+						Left->SetCustomDepthStencilValue(1);
+					}
+					if(SelectPlayer->GetPlayerAnimType()==ESelectPlayerAnimType::IdleStart)
+						SelectPlayer->SetPlayerAnimSelect();
+				}
 				if(SelectPlayer->GetPlayerJob()==EPlayerJob::Archer)
 					m_SelectCharacter->GetMesh()->SetCustomDepthStencilValue(3);
 
@@ -142,6 +166,16 @@ void ASelectPlayerController::Picking()
 			if(m_SelectCharacter)
 			{
 				m_SelectCharacter->GetMesh()->SetCustomDepthStencilValue(255);
+				USkeletalMeshComponent* Right = Cast<USkeletalMeshComponent>(m_SelectCharacter->GetMesh()->GetChildComponent(0));
+				USkeletalMeshComponent* Left = Cast<USkeletalMeshComponent>(m_SelectCharacter->GetMesh()->GetChildComponent(1));
+					
+				if(Right)
+				{
+					Right->SetRenderCustomDepth(true);
+					Right->SetCustomDepthStencilValue(255);
+					Left->SetRenderCustomDepth(true);
+					Left->SetCustomDepthStencilValue(255);
+				}
 				m_SelectCharacter = nullptr;
 			}
 		}
@@ -152,6 +186,16 @@ void ASelectPlayerController::Picking()
 		if (m_SelectCharacter)
 		{
 			m_SelectCharacter->GetMesh()->SetCustomDepthStencilValue(255);
+			USkeletalMeshComponent* Right = Cast<USkeletalMeshComponent>(m_SelectCharacter->GetMesh()->GetChildComponent(0));
+			USkeletalMeshComponent* Left = Cast<USkeletalMeshComponent>(m_SelectCharacter->GetMesh()->GetChildComponent(1));
+					
+			if(Right)
+			{
+				Right->SetRenderCustomDepth(true);
+				Right->SetCustomDepthStencilValue(255);
+				Left->SetRenderCustomDepth(true);
+				Left->SetCustomDepthStencilValue(255);
+			}
 			m_SelectCharacter = nullptr;
 		}
 	}

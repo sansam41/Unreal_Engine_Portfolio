@@ -111,7 +111,6 @@ void UBTTask_NormalAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 
 	if (Monster->GetAttackEnd())
 	{
-
 		if (Distance > MonsterInfo.AttackDistance)
 		{
 			FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
@@ -119,6 +118,7 @@ void UBTTask_NormalAttack::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* No
 
 		else 
 		{
+			
 			FVector Dir = TargetLoc - MonsterLoc;
 			Dir.Normalize();
 

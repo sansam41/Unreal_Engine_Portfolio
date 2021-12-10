@@ -9,6 +9,7 @@
 #include "../UI/InventoryTile.h"
 #include "../UI/MainHUD.h"
 #include "../UI/QuestWidget.h"
+#include "UEKR2/RPG/RPGGameModeBase.h"
 
 // Sets default values
 AItemBox::AItemBox()
@@ -65,7 +66,7 @@ void AItemBox::ItemBeginOverlap(UPrimitiveComponent* OverlapCom, AActor* OtherAc
 		if(ItemInfo)
 		{
 			// 인벤토리에 아이템을 추가한다.
-			AUEKR2GameModeBase* GameMode =Cast<AUEKR2GameModeBase>(GetWorld()->GetAuthGameMode());
+			ARPGGameModeBase* GameMode =Cast<ARPGGameModeBase>(GetWorld()->GetAuthGameMode());
 
 			if(GameMode)
 			{

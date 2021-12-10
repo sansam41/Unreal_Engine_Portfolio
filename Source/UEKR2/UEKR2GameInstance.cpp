@@ -44,11 +44,12 @@ void UUEKR2GameInstance::Init()
 
 
 	//Quest1
-	const FQuestTableInfo* Info = FindQuestInfo(TEXT("Quest1"));
+	const FQuestTableInfo* Info = FindQuestInfo(TEXT("Quest0"));
 	
 	Data.Name = Info->Name;
 	Data.QuestDesc = Info->QuestDesc;
 	Data.Complete = false;
+	Data.accept =false;
 
 	for(auto& CompleteData : Info->InfoArray)
 	{
@@ -62,12 +63,21 @@ void UUEKR2GameInstance::Init()
 
 		Data.CompleteArray.Add(DataInfo);
 	}
+	for(auto& RewardData : Info->RewardInfo)
+	{
+		FQuestRewardInfo DataInfo;
+
+		DataInfo.Type = RewardData.Type;
+		DataInfo.Reward = RewardData.Reward;
+
+		Data.RewardArray.Add(DataInfo);
+	}
 	
 
-	m_QuestComplete.Add(TEXT("Quest1"), Data);
+	m_QuestComplete.Add(TEXT("Quest0"), Data);
 	
 	//Quest2
-	Info = FindQuestInfo(TEXT("Quest2"));
+	Info = FindQuestInfo(TEXT("Quest1"));
 	
 	Data.Name = Info->Name;
 	Data.QuestDesc = Info->QuestDesc;
@@ -87,10 +97,52 @@ void UUEKR2GameInstance::Init()
 		Data.CompleteArray.Add(DataInfo);
 	}
 	
-	m_QuestComplete.Add(TEXT("Quest2"), Data);
+	for(auto& RewardData : Info->RewardInfo)
+	{
+		FQuestRewardInfo DataInfo;
+
+		DataInfo.Type = RewardData.Type;
+		DataInfo.Reward = RewardData.Reward;
+
+		Data.RewardArray.Add(DataInfo);
+	}
+	
+	m_QuestComplete.Add(TEXT("Quest1"), Data);
 
 	
 	//Quest3
+	Info = FindQuestInfo(TEXT("Quest2"));
+	
+	Data.Name = Info->Name;
+	Data.QuestDesc = Info->QuestDesc;
+	
+	
+	Data.CompleteArray.RemoveAll([](FQuestDataInfo v){return true;});
+
+	for(auto& CompleteData : Info->InfoArray)
+	{
+		FQuestDataInfo DataInfo;
+
+		DataInfo.Type = CompleteData.Type;
+		DataInfo.DestName = CompleteData.DestName;
+		DataInfo.MaxCount = CompleteData.Count;
+		DataInfo.Count = 0;
+		DataInfo.Complete =false;
+		Data.CompleteArray.Add(DataInfo);
+	}
+	
+	for(auto& RewardData : Info->RewardInfo)
+	{
+		FQuestRewardInfo DataInfo;
+
+		DataInfo.Type = RewardData.Type;
+		DataInfo.Reward = RewardData.Reward;
+
+		Data.RewardArray.Add(DataInfo);
+	}
+	m_QuestComplete.Add(TEXT("Quest2"), Data);
+
+	//Quest4
 	Info = FindQuestInfo(TEXT("Quest3"));
 	
 	Data.Name = Info->Name;
@@ -108,32 +160,20 @@ void UUEKR2GameInstance::Init()
 		DataInfo.MaxCount = CompleteData.Count;
 		DataInfo.Count = 0;
 		DataInfo.Complete =false;
+
 		Data.CompleteArray.Add(DataInfo);
+	}
+	
+	for(auto& RewardData : Info->RewardInfo)
+	{
+		FQuestRewardInfo DataInfo;
+
+		DataInfo.Type = RewardData.Type;
+		DataInfo.Reward = RewardData.Reward;
+
+		Data.RewardArray.Add(DataInfo);
 	}
 	m_QuestComplete.Add(TEXT("Quest3"), Data);
-
-	//Quest4
-	Info = FindQuestInfo(TEXT("Quest4"));
-	
-	Data.Name = Info->Name;
-	Data.QuestDesc = Info->QuestDesc;
-	
-	
-	Data.CompleteArray.RemoveAll([](FQuestDataInfo v){return true;});
-
-	for(auto& CompleteData : Info->InfoArray)
-	{
-		FQuestDataInfo DataInfo;
-
-		DataInfo.Type = CompleteData.Type;
-		DataInfo.DestName = CompleteData.DestName;
-		DataInfo.MaxCount = CompleteData.Count;
-		DataInfo.Count = 0;
-		DataInfo.Complete =false;
-
-		Data.CompleteArray.Add(DataInfo);
-	}
-	m_QuestComplete.Add(TEXT("Quest4"), Data);
 
 }
 

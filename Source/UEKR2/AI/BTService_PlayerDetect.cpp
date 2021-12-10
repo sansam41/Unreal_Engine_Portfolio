@@ -26,7 +26,10 @@ void UBTService_PlayerDetect::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 
 	if (!Monster)
 		return;
-
+	
+	if(Monster->m_Boss&&!(Monster->m_BattleStart))
+		return;
+	
 	const FMonsterInfo& MonsterInfo = Monster->GetMonsterInfo();
 
 	// 주변에 플레이아가 있는지 판단한다.
@@ -41,12 +44,12 @@ void UBTService_PlayerDetect::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 		FQuat::Identity,
 		ECollisionChannel::ECC_GameTraceChannel6,
 		FCollisionShape::MakeSphere(MonsterInfo.TraceDistance), params);
-
+/*
 #if ENABLE_DRAW_DEBUG
 	FColor DrawColor = Sweep ? FColor::Red : FColor::Green;
 	DrawDebugSphere(GetWorld(), Monster->GetActorLocation(), MonsterInfo.TraceDistance, 20, DrawColor, false, 0.3f);
 #endif
-
+*/
 	if (Sweep)
 		Controller->GetBlackboardComponent()->SetValueAsObject(TEXT("Target"), HitResult.GetActor());
 	else

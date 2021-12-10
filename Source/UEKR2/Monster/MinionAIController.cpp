@@ -5,7 +5,7 @@
 
 AMinionAIController::AMinionAIController()
 {
-	static ConstructorHelpers::FObjectFinder<UBehaviorTree> AITreeAsset(TEXT("BehaviorTree'/Game/Monster/BTMinion.BTMinion'"));
+	static ConstructorHelpers::FObjectFinder<UBehaviorTree> AITreeAsset(TEXT("BehaviorTree'/Game/Monster/RPG/AI/BTNormalMonster.BTNormalMonster'"));
 	if (AITreeAsset.Succeeded())
 		m_AITree = AITreeAsset.Object;
 	static ConstructorHelpers::FObjectFinder<UBlackboardData> BlackboardAsset(TEXT("BlackboardData'/Game/Monster/BBMonster.BBMonster'"));

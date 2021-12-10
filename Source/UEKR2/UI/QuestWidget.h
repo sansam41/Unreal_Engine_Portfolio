@@ -45,5 +45,9 @@ public:
 	void QuestMouseOn(UObject* Data,bool IsHovered);
 
 public:
+	void QuestAdd(const FString& QuestName);
 	void QuestCheck(EQuestType Type, const FString& Name);
+	bool QuestClearCheck(int32 Qnum);
+	void QuestReward(int32 Qnum);
+	
 };

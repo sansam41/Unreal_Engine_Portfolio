@@ -19,7 +19,6 @@ void AWeapon::SetMesh(const FString& Path)
 	USkeletalMesh* Mesh=LoadObject<USkeletalMesh>(nullptr,*Path);
 	m_Mesh->SetSkeletalMesh(Mesh);
 	
-	m_Mesh->SetRelativeScale3D(m_Mesh->GetRelativeScale3D()*1.5f);
 }
 // Called when the game starts or when spawned
 void AWeapon::BeginPlay()

@@ -3,7 +3,9 @@
 
 #include "MainHUD.h"
 
- void UMainHUD::NativeConstruct()
+#include "NpcDialogue.h"
+
+void UMainHUD::NativeConstruct()
  {
 	Super::NativeConstruct();
 
@@ -16,6 +18,9 @@
  	m_ChatWidget = Cast<UChatWidget>(GetWidgetFromName(TEXT("UI_Chat")));
  	m_QuestWidget = Cast<UQuestWidget>(GetWidgetFromName(TEXT("UI_Quest")));
  	m_Minimap = Cast<UMinimapWidget>(GetWidgetFromName(TEXT("UI_Minimap")));
+ 	m_NpcTalk = Cast<UUserWidget>(GetWidgetFromName(TEXT("UI_TalkNpc")));
+ 	m_NpcDialogue = Cast<UNpcDialogue>(GetWidgetFromName(TEXT("UI_QuestNpc")));
+ 	
 
 	m_LandScapeSlider->OnValueChanged.AddDynamic(this,&UMainHUD::LandScapeSliderValue);
 
@@ -52,5 +57,21 @@
  	else
  		m_MainMenu->SetVisibility(ESlateVisibility::Collapsed);
 
+ }
+ void UMainHUD::ShowNpcDialogue(bool Show)
+ {
+ 	if(Show==true)
+ 		m_NpcDialogue->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+ 	else
+ 		m_NpcDialogue->SetVisibility(ESlateVisibility::Collapsed);
+
+ }
+
+void UMainHUD::ShowNpcTalkKey(bool Show)
+ {
+ 	if(Show==true)
+ 		m_NpcTalk->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+ 	else
+ 		m_NpcTalk->SetVisibility(ESlateVisibility::Collapsed);
  }
 
